@@ -69,8 +69,9 @@ namespace ams::controller {
     }
 
     Result Dualshock4Controller::SetLightbarColour(RGBColour colour) {
-        auto config = mitm::GetGlobalConfig();
-        m_led_colour = config->misc.disable_sony_leds ? led_disable : colour;
+        mitm::ControllerProfileConfig config;
+        mitm::GetCustomIniConfig(&this->Address(), &config);
+        m_led_colour = config.misc.disable_sony_leds ? led_disable : colour;
         return this->PushRumbleLedState();
     }
 
@@ -89,7 +90,7 @@ namespace ams::controller {
         }
     }
 
-    void Dualshock4Controller::HandleInputReport0x01(const Dualshock4ReportData *src) {       
+    void Dualshock4Controller::HandleInputReport0x01(const Dualshock4ReportData *src) {
         m_left_stick.SetData(
             static_cast<uint16_t>(stick_scale_factor * src->input0x01.left_stick.x) & 0xfff,
             static_cast<uint16_t>(stick_scale_factor * (UINT8_MAX - src->input0x01.left_stick.y)) & 0xfff
@@ -163,8 +164,8 @@ namespace ams::controller {
     }
 
     Result Dualshock4Controller::PushRumbleLedState(void) {
-        Dualshock4OutputReport0x11 report = {0xa2, 0x11, 0xc0, 0x20, 0xf3, 0x04, 0x00, 
-            m_rumble_state.amp_motor_right, m_rumble_state.amp_motor_left, 
+        Dualshock4OutputReport0x11 report = {0xa2, 0x11, 0xc0, 0x20, 0xf3, 0x04, 0x00,
+            m_rumble_state.amp_motor_right, m_rumble_state.amp_motor_left,
             m_led_colour.r, m_led_colour.g, m_led_colour.b
         };
         report.crc = crc32Calculate(report.data, sizeof(report.data));

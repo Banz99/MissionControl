@@ -19,14 +19,16 @@ namespace ams::mitm {
 
     struct MissionControlConfig {
         struct {
-            bool enable_rumble;
-            bool enable_motion;
-        } general;
-
-        struct {
             char host_name[0x20];
             bluetooth::Address host_address;
         } bluetooth;
+    };
+
+    struct ControllerProfileConfig{
+         struct {
+            bool enable_rumble;
+            bool enable_motion;
+        } general;
 
         struct {
             bool disable_sony_leds;
@@ -34,6 +36,7 @@ namespace ams::mitm {
     };
 
     MissionControlConfig *GetGlobalConfig(void);
+    Result GetCustomIniConfig(const bluetooth::Address *address, ControllerProfileConfig *config);
     void ParseIniConfig(void);
 
 }

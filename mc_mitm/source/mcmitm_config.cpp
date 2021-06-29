@@ -22,8 +22,11 @@ namespace ams::mitm {
     namespace {
 
         constexpr const char *config_file_location = "sdmc:/atmosphere/config/missioncontrol.ini";
+        constexpr const char *cp_default_location = "sdmc:/switch/missioncontrol/profiles/default.ini";
 
-        MissionControlConfig g_global_config = {
+        MissionControlConfig g_global_config = {};
+
+        ControllerProfileConfig cp_global_config = {
             .general = {
                 .enable_rumble = true,
                 .enable_motion = true
@@ -37,7 +40,7 @@ namespace ams::mitm {
             if (strcasecmp(value, "true") == 0)
                 *out = true;
             else if (strcasecmp(value, "false") == 0)
-                *out = false; 
+                *out = false;
         }
 
         void ParseBluetoothAddress(const char *value, bluetooth::Address *out) {
@@ -60,20 +63,30 @@ namespace ams::mitm {
             *out = address;
         }
 
-        int ConfigIniHandler(void *user, const char *section, const char *name, const char *value) {
+        int MissionControlConfigIniHandler(void *user, const char *section, const char *name, const char *value) {
             auto config = reinterpret_cast<MissionControlConfig *>(user);
 
-            if (strcasecmp(section, "general") == 0) {
-                if (strcasecmp(name, "enable_rumble") == 0)
-                    ParseBoolean(value, &config->general.enable_rumble);  
-                else if (strcasecmp(name, "enable_motion") == 0)
-                    ParseBoolean(value, &config->general.enable_motion); 
-            }
-            else if (strcasecmp(section, "bluetooth") == 0) {
+            if (strcasecmp(section, "bluetooth") == 0) {
                 if (strcasecmp(name, "host_name") == 0)
                     std::strncpy(config->bluetooth.host_name, value, sizeof(config->bluetooth.host_name));
                 else if (strcasecmp(name, "host_address") == 0)
                     ParseBluetoothAddress(value, &config->bluetooth.host_address);
+            }
+            else {
+                return 0;
+            }
+
+            return 1;
+        }
+
+        int ControllerProfileIniHandler(void *user, const char *section, const char *name, const char *value) {
+            auto config = reinterpret_cast<ControllerProfileConfig *>(user);
+
+            if (strcasecmp(section, "general") == 0) {
+                if (strcasecmp(name, "enable_rumble") == 0)
+                    ParseBoolean(value, &config->general.enable_rumble);
+                else if (strcasecmp(name, "enable_motion") == 0)
+                    ParseBoolean(value, &config->general.enable_motion);
             }
             else if (strcasecmp(section, "misc") == 0) {
                 if (strcasecmp(name, "disable_sony_leds") == 0)
@@ -85,7 +98,6 @@ namespace ams::mitm {
 
             return 1;
         }
-
     }
 
     MissionControlConfig *GetGlobalConfig(void) {
@@ -100,16 +112,25 @@ namespace ams::mitm {
         ON_SCOPE_EXIT { fs::Unmount(mount_name); };
 
         /* Open the file. */
-        fs::FileHandle file;
+        fs::FileHandle mcinifile, cpinifile;
         {
-            if (R_FAILED(fs::OpenFile(std::addressof(file), config_file_location, fs::OpenMode_Read))) {
+            if (R_FAILED(fs::OpenFile(std::addressof(mcinifile), config_file_location, fs::OpenMode_Read))) {
+                return;
+            }
+            if (R_FAILED(fs::OpenFile(std::addressof(cpinifile), cp_default_location, fs::OpenMode_Read))) {
                 return;
             }
         }
-        ON_SCOPE_EXIT { fs::CloseFile(file); };
+        ON_SCOPE_EXIT { fs::CloseFile(mcinifile); fs::CloseFile(cpinifile); };
 
         /* Parse the config. */
-        util::ini::ParseFile(file, &g_global_config, ConfigIniHandler);
+        util::ini::ParseFile(mcinifile, &g_global_config, MissionControlConfigIniHandler);
+
+        util::ini::ParseFile(cpinifile, &cp_global_config, ControllerProfileIniHandler);
     }
 
+    Result GetCustomIniConfig(const bluetooth::Address *address, ControllerProfileConfig *config){
+        memcpy(config, &cp_global_config, sizeof(ControllerProfileConfig));
+        return 0;
+    }
 }

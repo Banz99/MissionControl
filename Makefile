@@ -38,7 +38,10 @@ dist: all
 
 	mkdir -p dist/atmosphere/config_templates
 	cp mc_mitm/config.ini dist/atmosphere/config_templates/missioncontrol.ini
-	
+
+	mkdir -p dist/switch/missioncontrol/profiles
+	cp mc_mitm/default.ini dist/switch/missioncontrol/profiles/default.ini
+
 	cd dist; zip -r $(PROJECT_NAME)-$(BUILD_VERSION).zip ./*; cd ../;
 	
 .PHONY: all clean dist $(TARGETS)
