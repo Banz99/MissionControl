@@ -145,10 +145,10 @@ namespace ams::controller {
             if (switch_report->input0x30.buttons.dpad_left)
                 temp_lstick_x -= (UINT12_MAX / 2);
 
-            switch_report->input0x30.buttons.dpad_down = switch_report->input0x30.left_stick.GetX() < DPAD_THRESHOLD_BEGIN ? 1 : 0;
-            switch_report->input0x30.buttons.dpad_up = switch_report->input0x30.left_stick.GetX() > DPAD_THRESHOLD_END ? 1 : 0;
-            switch_report->input0x30.buttons.dpad_left = switch_report->input0x30.left_stick.GetY() < DPAD_THRESHOLD_BEGIN ? 1 : 0;
-            switch_report->input0x30.buttons.dpad_right = switch_report->input0x30.left_stick.GetY() > DPAD_THRESHOLD_END ? 1 : 0;
+            switch_report->input0x30.buttons.dpad_down = switch_report->input0x30.left_stick.GetY() < DPAD_THRESHOLD_BEGIN ? 1 : 0;
+            switch_report->input0x30.buttons.dpad_up = switch_report->input0x30.left_stick.GetY() > DPAD_THRESHOLD_END ? 1 : 0;
+            switch_report->input0x30.buttons.dpad_left = switch_report->input0x30.left_stick.GetX() < DPAD_THRESHOLD_BEGIN ? 1 : 0;
+            switch_report->input0x30.buttons.dpad_right = switch_report->input0x30.left_stick.GetX() > DPAD_THRESHOLD_END ? 1 : 0;
 
             switch_report->input0x30.left_stick.SetData(temp_lstick_x, temp_lstick_y);
         }
