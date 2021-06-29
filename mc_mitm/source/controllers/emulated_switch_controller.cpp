@@ -104,6 +104,7 @@ namespace ams::controller {
         m_invert_rstick_yaxis = config.misc.invert_rstick_yaxis;
         m_lstick_deadzone = config.misc.lstick_deadzone;
         m_rstick_deadzone = config.misc.rstick_deadzone;
+        m_disable_home_button = config.misc.disable_home_button;
     };
 
     void EmulatedSwitchController::ClearControllerState(void) {
@@ -126,6 +127,9 @@ namespace ams::controller {
         switch_report->input0x30.left_stick     = m_left_stick;
         switch_report->input0x30.right_stick    = m_right_stick;
         std::memcpy(&switch_report->input0x30.motion, &m_motion_data, sizeof(m_motion_data));
+
+        if (m_disable_home_button)
+            switch_report->input0x30.buttons.home = 0;
 
         this->ApplyButtonCombos(&switch_report->input0x30.buttons);
 
