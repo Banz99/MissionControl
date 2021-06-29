@@ -49,6 +49,8 @@ namespace ams::mitm {
             bool invert_lstick_yaxis;
             bool invert_rstick_xaxis;
             bool invert_rstick_yaxis;
+            float lstick_deadzone;
+            float rstick_deadzone;
         } misc;
     };
 
