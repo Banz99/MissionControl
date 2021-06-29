@@ -45,6 +45,10 @@ namespace ams::mitm {
         struct {
             bool disable_sony_leds;
             bool swap_dpad_lstick;
+            bool invert_lstick_xaxis;
+            bool invert_lstick_yaxis;
+            bool invert_rstick_xaxis;
+            bool invert_rstick_yaxis;
         } misc;
     };
 

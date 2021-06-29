@@ -97,6 +97,10 @@ namespace ams::controller {
         m_colours.right_grip = config.colours.right_grip;
 
         m_swap_dpad_lstick = config.misc.swap_dpad_lstick;
+        m_invert_lstick_xaxis = config.misc.invert_lstick_xaxis;
+        m_invert_lstick_yaxis = config.misc.invert_lstick_yaxis;
+        m_invert_rstick_xaxis = config.misc.invert_rstick_xaxis;
+        m_invert_rstick_yaxis = config.misc.invert_rstick_yaxis;
     };
 
     void EmulatedSwitchController::ClearControllerState(void) {
@@ -141,6 +145,15 @@ namespace ams::controller {
 
             switch_report->input0x30.left_stick.SetData(temp_lstick_x, temp_lstick_y);
         }
+
+        if (m_invert_lstick_xaxis)
+            switch_report->input0x30.left_stick.InvertX();
+        if (m_invert_lstick_yaxis)
+            switch_report->input0x30.left_stick.InvertY();
+        if (m_invert_rstick_xaxis)
+            switch_report->input0x30.right_stick.InvertX();
+        if (m_invert_rstick_yaxis)
+            switch_report->input0x30.right_stick.InvertY();
 
         switch_report->input0x30.timer = os::ConvertToTimeSpan(os::GetSystemTick()).GetMilliSeconds() & 0xff;
         return bluetooth::hid::report::WriteHidReportBuffer(&m_address, &s_input_report);

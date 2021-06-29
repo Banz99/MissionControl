@@ -72,7 +72,10 @@ namespace ams::controller {
             bool m_enable_rumble;
 
             bool m_swap_dpad_lstick;
-
+            bool m_invert_lstick_xaxis;
+            bool m_invert_lstick_yaxis;
+            bool m_invert_rstick_xaxis;
+            bool m_invert_rstick_yaxis;
     };
 
 }
