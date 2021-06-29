@@ -36,6 +36,12 @@ namespace ams::mitm {
                 .enable_rumble = true,
                 .enable_motion = true
             },
+            .colours = {
+                .body = {0x32, 0x32, 0x32},
+                .buttons = {0xe6, 0xe6, 0xe6},
+                .left_grip = {0x46, 0x46, 0x46},
+                .right_grip = {0x46, 0x46, 0x46}
+            },
             .misc = {
                 .disable_sony_leds = false
             }
@@ -46,6 +52,52 @@ namespace ams::mitm {
                 *out = true;
             else if (strcasecmp(value, "false") == 0)
                 *out = false;
+        }
+
+        void ParseRGBstring(const char* value, controller::RGBColour *out){
+            uint8_t temp[3];
+            if (std::strncmp(value, "rgb(", 4) == 0) {
+                 value+=4;
+                 uint32_t i = 0, k=0;
+                 uint32_t str_len = strlen(value);
+                 temp[0] = 0;
+                 temp[1] = 0;
+                 temp[2] = 0;
+                 while(i<str_len && value[i] !=')' && k <= 2){
+                    if(value[i] >= '0' && value[i] <= '9') {
+                         temp[k] *= 10;
+                         temp[k] += value[i] - '0';
+
+                    }
+                    else if(value[i] == ','){
+                        k++;
+                    }
+                    else if(value[i] != ' ') //Ignore spaces if found
+                        return;
+                    i++;
+                 }
+                 if(k==2){
+                    out->r = temp[0];
+                    out->g = temp[1];
+                    out->b = temp[2];
+                 }
+            }
+            else if (value[0] == '#') {
+                char buf[2 + 1];
+                if(strlen(value)>=7){
+                    std::memcpy(buf, value + 1, 2);
+                    temp[0] = static_cast<uint8_t>(std::strtoul(buf, nullptr, 16));
+                    std::memcpy(buf, value + 3, 2);
+                    temp[1] = static_cast<uint8_t>(std::strtoul(buf, nullptr, 16));
+                    std::memcpy(buf, value + 5, 2);
+                    temp[2] = static_cast<uint8_t>(std::strtoul(buf, nullptr, 16));
+                    out->r = temp[0];
+                    out->g = temp[1];
+                    out->b = temp[2];
+                }
+                return;
+            }
+            return;
         }
 
         Result StringifyBluetoothAddress(const bluetooth::Address *address, char *out, size_t out_size) {
@@ -112,6 +164,16 @@ namespace ams::mitm {
                     ParseBoolean(value, &config->general.enable_rumble);
                 else if (strcasecmp(name, "enable_motion") == 0)
                     ParseBoolean(value, &config->general.enable_motion);
+            }
+            else if (strcasecmp(section, "colours") == 0) {
+                if (strcasecmp(name, "body") == 0)
+                    ParseRGBstring(value, &config->colours.body);
+                else if (strcasecmp(name, "buttons") == 0)
+                    ParseRGBstring(value, &config->colours.buttons);
+                else if (strcasecmp(name, "left_grip") == 0)
+                    ParseRGBstring(value, &config->colours.left_grip);
+                else if (strcasecmp(name, "right_grip") == 0)
+                    ParseRGBstring(value, &config->colours.right_grip);
             }
             else if (strcasecmp(section, "misc") == 0) {
                 if (strcasecmp(name, "disable_sony_leds") == 0)
