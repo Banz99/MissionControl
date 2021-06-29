@@ -43,7 +43,8 @@ namespace ams::mitm {
                 .right_grip = {0x46, 0x46, 0x46}
             },
             .misc = {
-                .disable_sony_leds = false
+                .disable_sony_leds = false,
+                .swap_dpad_lstick = false
             }
         };
 
@@ -178,6 +179,8 @@ namespace ams::mitm {
             else if (strcasecmp(section, "misc") == 0) {
                 if (strcasecmp(name, "disable_sony_leds") == 0)
                     ParseBoolean(value, &config->misc.disable_sony_leds);
+                else if (strcasecmp(name, "swap_dpad_lstick") == 0)
+                    ParseBoolean(value, &config->misc.swap_dpad_lstick);
             }
             else {
                 return 0;
