@@ -180,15 +180,15 @@ namespace ams::mitm {
         int MissionControlConfigIniHandler(void *user, const char *section, const char *name, const char *value) {
             auto config = reinterpret_cast<MissionControlConfig *>(user);
 
-            if (strcasecmp(section, "bluetooth") == 0) {
+            if (strcasecmp(section, "general") == 0) {
+                if (strcasecmp(name, "disable_custom_profiles") == 0)
+                    ParseBoolean(value, &config->general.disable_custom_profiles);
+            }
+            else if (strcasecmp(section, "bluetooth") == 0) {
                 if (strcasecmp(name, "host_name") == 0)
                     std::strncpy(config->bluetooth.host_name, value, sizeof(config->bluetooth.host_name));
                 else if (strcasecmp(name, "host_address") == 0)
                     ParseBluetoothAddress(value, &config->bluetooth.host_address);
-            }
-            else if (strcasecmp(section, "general") == 0) {
-                if (strcasecmp(name, "disable_custom_profiles") == 0)
-                    ParseBoolean(value, &config->general.disable_custom_profiles);
             }
             else {
                 return 0;

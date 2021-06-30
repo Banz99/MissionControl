@@ -92,9 +92,9 @@ namespace ams::controller {
 
         m_enable_rumble = config.general.enable_rumble;
 
-        m_colours.body    = config.colours.body;
-        m_colours.buttons    = config.colours.buttons;
-        m_colours.left_grip  = config.colours.left_grip;
+        m_colours.body = config.colours.body;
+        m_colours.buttons = config.colours.buttons;
+        m_colours.left_grip = config.colours.left_grip;
         m_colours.right_grip = config.colours.right_grip;
 
         m_swap_dpad_lstick = config.misc.swap_dpad_lstick;
