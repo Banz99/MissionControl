@@ -36,11 +36,11 @@ dist: all
 	
 	cp -r exefs_patches dist/atmosphere/
 
-	mkdir -p dist/atmosphere/config_templates
-	cp mc_mitm/config.ini dist/atmosphere/config_templates/missioncontrol.ini
+	mkdir -p dist/config/MissionControl
+	cp mc_mitm/config.ini dist/config/MissionControl/missioncontrol.ini.template
 
-	mkdir -p dist/switch/missioncontrol/profiles
-	cp mc_mitm/default.ini dist/switch/missioncontrol/profiles/default.ini
+	mkdir -p dist/config/MissionControl/profiles
+	cp mc_mitm/default.ini dist/config/MissionControl/profiles/default.ini
 
 	cd dist; zip -r $(PROJECT_NAME)-$(BUILD_VERSION).zip ./*; cd ../;
 	

@@ -21,9 +21,9 @@ namespace ams::mitm {
 
     namespace {
 
-        constexpr const char *config_file_location = "sdmc:/atmosphere/config/missioncontrol.ini";
-        constexpr const char *cp_default_location = "sdmc:/switch/missioncontrol/profiles/default.ini";
-        constexpr const char *custom_config_base = "sdmc:/switch/missioncontrol/profiles/config_";
+        constexpr const char *config_file_location = "sdmc:/config/MissionControl/missioncontrol.ini";
+        constexpr const char *cp_default_location = "sdmc:/config/MissionControl/profiles/default.ini";
+        constexpr const char *custom_config_base = "sdmc:/config/MissionControl/profiles/config_";
 
         MissionControlConfig g_global_config = {
             .general = {
