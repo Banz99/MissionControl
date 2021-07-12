@@ -46,6 +46,9 @@ namespace ams::controller {
         R_TRY(EmulatedSwitchController::Initialize());
         R_TRY(this->PushRumbleLedState());
 
+        mitm::ControllerProfileConfig config;
+        mitm::GetCustomIniConfig(&this->Address(), &config);
+        m_report_rate = (Dualshock4ReportRate)config.misc.dualshock_pollingrate_divisor;
         return ams::ResultSuccess();
     }
 
