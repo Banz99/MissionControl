@@ -43,6 +43,7 @@ namespace ams::mitm {
         } colours;
 
         struct {
+            bool use_western_layout;
             bool disable_sony_leds;
             int32_t dualshock_pollingrate_divisor;
             bool swap_dpad_lstick;

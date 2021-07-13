@@ -101,6 +101,7 @@ namespace ams::controller {
         m_colours.left_grip = config.colours.left_grip;
         m_colours.right_grip = config.colours.right_grip;
 
+        m_use_western_layout = config.misc.use_western_layout;
         m_swap_dpad_lstick = config.misc.swap_dpad_lstick;
         m_invert_lstick_xaxis = config.misc.invert_lstick_xaxis;
         m_invert_lstick_yaxis = config.misc.invert_lstick_yaxis;
@@ -136,6 +137,15 @@ namespace ams::controller {
             switch_report->input0x30.buttons.home = 0;
 
         this->ApplyButtonCombos(&switch_report->input0x30.buttons);
+
+        if(m_use_western_layout) {
+            uint8_t temp = switch_report->input0x30.buttons.A;
+            switch_report->input0x30.buttons.A = switch_report->input0x30.buttons.B;
+            switch_report->input0x30.buttons.B = temp;
+            temp = switch_report->input0x30.buttons.X;
+            switch_report->input0x30.buttons.X = switch_report->input0x30.buttons.Y;
+            switch_report->input0x30.buttons.Y = temp;
+        }
 
         if (m_swap_dpad_lstick) {
             uint16_t temp_lstick_x = STICK_ZERO; //Start in a neutral position

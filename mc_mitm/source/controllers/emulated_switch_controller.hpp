@@ -71,6 +71,7 @@ namespace ams::controller {
             ProControllerColours m_colours;
             bool m_enable_rumble;
 
+            bool m_use_western_layout;
             bool m_swap_dpad_lstick;
             bool m_invert_lstick_xaxis;
             bool m_invert_lstick_yaxis;
