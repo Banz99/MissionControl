@@ -43,8 +43,8 @@ namespace ams::mitm {
                 .right_grip = {0x46, 0x46, 0x46}
             },
             .misc = {
-                .use_western_layout=false,
-                .disable_sony_leds = false,
+                .use_western_layout = false,
+                .sony_led_brightness = 8,
                 .dualshock_pollingrate_divisor = 8,
                 .swap_dpad_lstick = false,
                 .invert_lstick_xaxis = false,
@@ -96,7 +96,15 @@ namespace ams::mitm {
             int32_t temp=8;
             ParseInt(value, &temp);
             if(temp >= 0 && temp <= 16)
-            *out = temp;
+                *out = temp;
+            else *out = 8;
+        }
+
+        void ParseBrightness(const char *value, int32_t *out){
+            int32_t temp=8;
+            ParseInt(value, &temp);
+            if(temp >= 0 && temp <= 63)
+                *out = temp;
             else *out = 8;
         }
 
@@ -233,8 +241,8 @@ namespace ams::mitm {
             else if (strcasecmp(section, "misc") == 0) {
                 if (strcasecmp(name, "use_western_layout") == 0)
                     ParseBoolean(value, &config->misc.use_western_layout);
-                else if (strcasecmp(name, "disable_sony_leds") == 0)
-                    ParseBoolean(value, &config->misc.disable_sony_leds);
+                else if (strcasecmp(name, "sony_led_brightness") == 0)
+                    ParseBrightness(value, &config->misc.sony_led_brightness);
                 else if (strcasecmp(name, "dualshock_pollingrate_divisor") == 0)
                     ParsePollingRate(value, &config->misc.dualshock_pollingrate_divisor);
                 else if (strcasecmp(name, "swap_dpad_lstick") == 0)
