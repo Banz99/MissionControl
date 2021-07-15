@@ -26,6 +26,10 @@ namespace ams::controller {
         constexpr uint8_t init_data1[] = {0x55};
         constexpr uint8_t init_data2[] = {0x00};
 
+        constexpr uint8_t init_mp_wiimote[] = {0x04};
+        constexpr uint8_t init_mp_nunchuck[] = {0x05};
+        constexpr uint8_t init_mp_classic[] = {0x07};
+
         constexpr float nunchuck_stick_scale_factor  = float(UINT12_MAX) / 0xb8;
         constexpr float wiiu_scale_factor            = 2.0;
         constexpr float left_stick_scale_factor      = float(UINT12_MAX) / 0x3f;
@@ -85,6 +89,18 @@ namespace ams::controller {
             this->ReadMemory(0x04a400fa, 6);
         }
 
+
+        //This must be done after the extension recognition to allow enabling interleaved modes
+        if(m_motion_plus_status == WiiMotionPlusStatus_Unchecked){
+            BTMITM_LOG_FMT("controller: Wii sending wiimotionplus check: %d]", src->input0x20.extension_connected);
+            //Check 3 times, as per wiki suggestion
+            svcSleepThread(20'000'000ULL);
+            this->ReadMemory(0x04a600fe, 2);
+            /*svcSleepThread(20'000'000ULL);
+            this->ReadMemory(0x04a600fe, 2);
+            svcSleepThread(20'000'000ULL);
+            this->ReadMemory(0x04a600fe, 2);*/
+        }
         m_battery = convert_battery_255(src->input0x20.battery);
     }
 
@@ -117,13 +133,46 @@ namespace ams::controller {
                     m_extension = WiiExtensionController_TaTaCon;
                     this->SetReportMode(0x32);
                     break;
+                case 0x0000a4200405ULL:
+                    m_motion_plus_status = WiiMotionPlusStatus_OnlyWiimote;
+                    this->SetReportMode(0x32); //Extension data is pure wiimotionplus data
+                    break;
                 default:
                     m_extension = WiiExtensionController_Unsupported;
                     this->SetReportMode(0x31);
                     break;
             }
         }
+        else if (read_addr == 0x00fe) {
 
+            if(m_motion_plus_status == WiiMotionPlusStatus_Unchecked || m_motion_plus_status == WiiMotionPlusStatus_None){
+                if (src->input0x21.error != 7) {
+                    uint16_t extension_id = (util::SwapBytes(*reinterpret_cast<const uint64_t *>(&src->input0x21.data)) >> 16);
+
+                    if (extension_id == 0x0005) {
+                        svcSleepThread(20'000'000ULL); //Wiimote has just responded to a read request
+                        if(m_extension == WiiExtensionController_None) {
+                            //This will trigger an input report 20, with an extension connected flag, so it can activate the 0x0000a4200405ULL case above
+                            this->WriteMemory(0x04a600fe, init_mp_wiimote, sizeof(init_mp_wiimote));
+                        }
+                        else if (m_extension == WiiExtensionController_Nunchuck) {
+                            //Interleaved report between wiimotionplus data and nunchuck data inside the extension bytes
+                            m_motion_plus_status = WiiMotionPlusStatus_Interleaved_Nunchuck;
+                            this->WriteMemory(0x04a600fe, init_mp_nunchuck, sizeof(init_mp_nunchuck));
+                            m_interleaved_wiimotiondata = true;
+                        }
+                        else if (m_extension == WiiExtensionController_Classic || m_extension == WiiExtensionController_ClassicPro) {
+                            //Interleaved report between wiimotionplus data and classic controller data inside the extension bytes
+                            m_motion_plus_status = WiiMotionPlusStatus_Interleaved_Classic;
+                            this->WriteMemory(0x04a600fe, init_mp_classic, sizeof(init_mp_classic));
+                            m_interleaved_wiimotiondata = true;
+                        }
+                        else m_motion_plus_status = WiiMotionPlusStatus_None; //If you're using another extension, wiimotion data cannot be retrieved
+                    }
+                }
+                else m_motion_plus_status = WiiMotionPlusStatus_None;
+            }
+        }
         this->ClearControllerState();
     }
 
@@ -202,11 +251,17 @@ namespace ams::controller {
     void WiiController::MapExtensionBytes(const uint8_t ext[]) {
         switch(m_extension) {
             case WiiExtensionController_Nunchuck:
-                this->MapNunchuckExtension(ext);
+                if ((m_motion_plus_status != WiiMotionPlusStatus_Interleaved_Nunchuck) || (!m_interleaved_wiimotiondata))
+                    this->MapNunchuckExtension(ext);
+                else this->MapWiiMotionPlus(ext);
+                m_interleaved_wiimotiondata = !m_interleaved_wiimotiondata;
                 break;
             case WiiExtensionController_Classic:
             case WiiExtensionController_ClassicPro:
-                this->MapClassicControllerExtension(ext);
+                if ((m_motion_plus_status != WiiMotionPlusStatus_Interleaved_Classic) || (!m_interleaved_wiimotiondata))
+                    this->MapClassicControllerExtension(ext);
+                else this->MapWiiMotionPlus(ext);
+                m_interleaved_wiimotiondata = !m_interleaved_wiimotiondata;
                 break;
             case WiiExtensionController_WiiUPro:
                 this->MapWiiUProControllerExtension(ext);
@@ -215,26 +270,42 @@ namespace ams::controller {
                 this->MapTaTaConExtension(ext);
                 break;
             default:
+                if(m_motion_plus_status == WiiMotionPlusStatus_OnlyWiimote){
+                    this->MapWiiMotionPlus(ext);
+                }
                 break;
         }
     }
 
     void WiiController::MapNunchuckExtension(const uint8_t ext[]) {
-        auto extension = reinterpret_cast<const WiiNunchuckExtensionData *>(ext);
+        if(m_motion_plus_status == WiiMotionPlusStatus_Interleaved_Nunchuck) {
+            auto extension = reinterpret_cast<const WiiInterleavedNunchuckExtensionData *>(ext);
+            //TODO: Handle accelerometer data differently
+            m_left_stick.SetData(
+                std::clamp<uint16_t>(static_cast<uint16_t>(nunchuck_stick_scale_factor * (extension->stick_x - 0x80) + STICK_ZERO), 0, 0xfff),
+                std::clamp<uint16_t>(static_cast<uint16_t>(nunchuck_stick_scale_factor * (extension->stick_y - 0x80) + STICK_ZERO), 0, 0xfff)
+            );
 
-        m_left_stick.SetData(
-            std::clamp<uint16_t>(static_cast<uint16_t>(nunchuck_stick_scale_factor * (extension->stick_x - 0x80) + STICK_ZERO), 0, 0xfff),
-            std::clamp<uint16_t>(static_cast<uint16_t>(nunchuck_stick_scale_factor * (extension->stick_y - 0x80) + STICK_ZERO), 0, 0xfff)
-        );
+            m_buttons.L  = !extension->C;
+            m_buttons.ZL = !extension->Z;
+        }
+        else {
+            auto extension = reinterpret_cast<const WiiNunchuckExtensionData *>(ext);
+            //TODO: Handle accelerometer data differently
+            m_left_stick.SetData(
+                std::clamp<uint16_t>(static_cast<uint16_t>(nunchuck_stick_scale_factor * (extension->stick_x - 0x80) + STICK_ZERO), 0, 0xfff),
+                std::clamp<uint16_t>(static_cast<uint16_t>(nunchuck_stick_scale_factor * (extension->stick_y - 0x80) + STICK_ZERO), 0, 0xfff)
+            );
 
-        m_buttons.L  = !extension->C;
-        m_buttons.ZL = !extension->Z;
+            m_buttons.L  = !extension->C;
+            m_buttons.ZL = !extension->Z;
+        }
     }
 
     void WiiController::MapClassicControllerExtension(const uint8_t ext[]) {
         m_left_stick.SetData(
-            static_cast<uint16_t>(left_stick_scale_factor * ((ext[0] & 0x3f) - 0x20) + STICK_ZERO) & 0xfff,
-            static_cast<uint16_t>(left_stick_scale_factor * ((ext[1] & 0x3f) - 0x20) + STICK_ZERO) & 0xfff
+            static_cast<uint16_t>(left_stick_scale_factor * ((ext[0] & (m_motion_plus_status == WiiMotionPlusStatus_Interleaved_Classic ? 0x3e : 0x3f)) - 0x20) + STICK_ZERO) & 0xfff,
+            static_cast<uint16_t>(left_stick_scale_factor * ((ext[1] & (m_motion_plus_status == WiiMotionPlusStatus_Interleaved_Classic ? 0x3e : 0x3f)) - 0x20) + STICK_ZERO) & 0xfff
         );
         m_right_stick.SetData(
             static_cast<uint16_t>(right_stick_scale_factor * ((((ext[0] >> 3) & 0x18) | ((ext[1] >> 5) & 0x06) | ((ext[2] >> 7) & 0x01)) - 0x10) + STICK_ZERO) & 0xfff,
@@ -244,9 +315,9 @@ namespace ams::controller {
         auto buttons = reinterpret_cast<const WiiClassicControllerButtonData *>(&ext[4]);
 
         m_buttons.dpad_down  |= !buttons->dpad_down;
-        m_buttons.dpad_up    |= !buttons->dpad_up;
+        m_buttons.dpad_up    |= !(m_motion_plus_status == WiiMotionPlusStatus_Interleaved_Classic ? ext[0] & 0x01 : buttons->dpad_up);
         m_buttons.dpad_right |= !buttons->dpad_right;
-        m_buttons.dpad_left  |= !buttons->dpad_left;
+        m_buttons.dpad_left  |= !(m_motion_plus_status == WiiMotionPlusStatus_Interleaved_Classic ? ext[1] & 0x01 : buttons->dpad_left);
 
         m_buttons.A |= !buttons->A;
         m_buttons.B |= !buttons->B;
@@ -307,6 +378,12 @@ namespace ams::controller {
         m_buttons.Y           = !extension->R_center;
         m_buttons.dpad_up    |= !extension->L_rim;
         m_buttons.dpad_right |= !extension->L_center;
+    }
+
+    void WiiController::MapWiiMotionPlus(const uint8_t ext[]) {
+        auto extension = reinterpret_cast<const WiiMotionPlusData *>(ext);
+
+        //TODO: Figure out how to convert gyro data
     }
 
     Result WiiController::WriteMemory(uint32_t write_addr, const uint8_t *data, uint8_t size) {

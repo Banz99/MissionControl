@@ -35,6 +35,14 @@ namespace ams::controller {
         WiiExtensionController_Unsupported,
     };
 
+    enum WiiMotionPlusStatus {
+        WiiMotionPlusStatus_Unchecked,
+        WiiMotionPlusStatus_None,
+        WiiMotionPlusStatus_OnlyWiimote,
+        WiiMotionPlusStatus_Interleaved_Nunchuck,
+        WiiMotionPlusStatus_Interleaved_Classic,
+    };
+
     struct WiiButtonData {
         uint8_t dpad_left   : 1;
         uint8_t dpad_right  : 1;
@@ -42,7 +50,7 @@ namespace ams::controller {
         uint8_t dpad_up     : 1;
         uint8_t plus        : 1;
         uint8_t             : 0;
-        
+
         uint8_t two         : 1;
         uint8_t one         : 1;
         uint8_t B           : 1;
@@ -50,6 +58,23 @@ namespace ams::controller {
         uint8_t minus       : 1;
         uint8_t             : 2;
         uint8_t home        : 1;
+    } __attribute__ ((__packed__));
+
+    struct WiiMotionPlusData {
+        uint8_t yaw_down_speed_70;
+        uint8_t roll_left_speed_70;
+        uint8_t pitch_left_speed_70;
+
+        uint8_t pitch_slow_mode     : 1;
+        uint8_t yaw_slow_mode       : 1;
+        uint8_t yaw_down_speed_138  : 6;
+
+        uint8_t extension           : 1;
+        uint8_t roll_slow_mode      : 1;
+        uint8_t roll_left_speed_138 : 6;
+
+        uint8_t                     : 2;
+        uint8_t pitch_left_speed_138: 6;
     } __attribute__ ((__packed__));
 
     struct WiiAccelerometerData {
@@ -71,7 +96,7 @@ namespace ams::controller {
         uint8_t dpad_up     : 1;
         uint8_t dpad_left   : 1;
         uint8_t ZR          : 1;
-        uint8_t X           : 1; 
+        uint8_t X           : 1;
         uint8_t A           : 1;
         uint8_t Y           : 1;
         uint8_t B           : 1;
@@ -89,7 +114,24 @@ namespace ams::controller {
         uint8_t C : 1;
         uint8_t accel_x_10 : 2;
         uint8_t accel_y_10 : 2;
-        uint8_t accel_z_10 : 2; 
+        uint8_t accel_z_10 : 2;
+    } __attribute__ ((__packed__));
+
+    struct WiiInterleavedNunchuckExtensionData {
+        uint8_t stick_x;
+        uint8_t stick_y;
+        uint8_t accel_x_92;
+        uint8_t accel_y_92;
+
+        uint8_t extension  : 1;
+        uint8_t accel_z_93 : 7;
+
+        uint8_t            : 2;
+        uint8_t Z          : 1;
+        uint8_t C          : 1;
+        uint8_t accel_x_1  : 2;
+        uint8_t accel_y_1  : 2;
+        uint8_t accel_z_21 : 2;
     } __attribute__ ((__packed__));
 
     struct WiiUProButtonData {
@@ -105,7 +147,7 @@ namespace ams::controller {
         uint8_t dpad_up     : 1;
         uint8_t dpad_left   : 1;
         uint8_t ZR          : 1;
-        uint8_t X           : 1; 
+        uint8_t X           : 1;
         uint8_t A           : 1;
         uint8_t Y           : 1;
         uint8_t B           : 1;
@@ -288,15 +330,16 @@ namespace ams::controller {
     class WiiController : public EmulatedSwitchController {
 
         public:
-            static constexpr const HardwareID hardware_ids[] = { 
+            static constexpr const HardwareID hardware_ids[] = {
                 {0x057e, 0x0306},  // Official Wiimote
                 {0x057e, 0x0330},  // Official Wii U Pro Controller
             };
 
-            WiiController(const bluetooth::Address *address)    
+            WiiController(const bluetooth::Address *address)
                 : EmulatedSwitchController(address)
                 , m_extension(WiiExtensionController_None)
-                , m_rumble_state(0) { };
+                , m_rumble_state(0)
+                , m_motion_plus_status(WiiMotionPlusStatus_Unchecked) { };
 
             Result Initialize(void);
             Result SetVibration(const SwitchRumbleData *rumble_data);
@@ -321,6 +364,7 @@ namespace ams::controller {
             void MapClassicControllerExtension(const uint8_t ext[]);
             void MapWiiUProControllerExtension(const uint8_t ext[]);
             void MapTaTaConExtension(const uint8_t ext[]);
+            void MapWiiMotionPlus(const uint8_t ext[]);
 
             Result WriteMemory(uint32_t write_addr, const uint8_t *data, uint8_t size);
             Result ReadMemory(uint32_t read_addr, uint16_t size);
@@ -329,7 +373,9 @@ namespace ams::controller {
             Result QueryStatus(void);
 
             WiiExtensionController m_extension;
+            bool m_interleaved_wiimotiondata;
             bool m_rumble_state;
+            WiiMotionPlusStatus m_motion_plus_status;
     };
 
 }
