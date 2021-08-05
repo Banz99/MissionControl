@@ -99,6 +99,7 @@ namespace ams::controller {
         m_colours.right_grip = config.colours.right_grip;
 
         m_enable_rumble = config.general.enable_rumble;
+        m_swap_dpad_lstick = config.misc.swap_dpad_lstick;
     };
 
     void EmulatedSwitchController::ClearControllerState(void) {
@@ -123,6 +124,26 @@ namespace ams::controller {
         std::memcpy(&switch_report->input0x30.motion, &m_motion_data, sizeof(m_motion_data));
 
         this->ApplyButtonCombos(&switch_report->input0x30.buttons);
+
+        if (m_swap_dpad_lstick) {
+            uint16_t temp_lstick_x = STICK_ZERO; //Start in a neutral position
+            uint16_t temp_lstick_y = STICK_ZERO;
+            if (switch_report->input0x30.buttons.dpad_down)
+                temp_lstick_y -= (UINT12_MAX / 2);
+            if (switch_report->input0x30.buttons.dpad_up) //Should be if else, but some controllers don't have an actual dpad, so both states are allowed
+                temp_lstick_y += (UINT12_MAX / 2);
+            if (switch_report->input0x30.buttons.dpad_right)
+                temp_lstick_x += (UINT12_MAX / 2);
+            if (switch_report->input0x30.buttons.dpad_left)
+                temp_lstick_x -= (UINT12_MAX / 2);
+
+            switch_report->input0x30.buttons.dpad_down = switch_report->input0x30.left_stick.GetX() < DPAD_THRESHOLD_BEGIN ? 1 : 0;
+            switch_report->input0x30.buttons.dpad_up = switch_report->input0x30.left_stick.GetX() > DPAD_THRESHOLD_END ? 1 : 0;
+            switch_report->input0x30.buttons.dpad_left = switch_report->input0x30.left_stick.GetY() < DPAD_THRESHOLD_BEGIN ? 1 : 0;
+            switch_report->input0x30.buttons.dpad_right = switch_report->input0x30.left_stick.GetY() > DPAD_THRESHOLD_END ? 1 : 0;
+
+            switch_report->input0x30.left_stick.SetData(temp_lstick_x, temp_lstick_y);
+        }
 
         switch_report->input0x30.timer = os::ConvertToTimeSpan(os::GetSystemTick()).GetMilliSeconds() & 0xff;
         return bluetooth::hid::report::WriteHidReportBuffer(&m_address, &s_input_report);

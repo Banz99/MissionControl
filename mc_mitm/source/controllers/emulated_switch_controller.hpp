@@ -18,6 +18,10 @@
 
 namespace ams::controller {
 
+    constexpr auto DPAD_THRESHOLD_BEGIN = STICK_ZERO - UINT12_MAX/4;
+    constexpr auto DPAD_THRESHOLD_END = STICK_ZERO + UINT12_MAX/4;
+
+
     inline uint8_t ScaleRumbleAmplitude(float amp, uint8_t lower, uint8_t upper) {
         return amp > 0.0 ? static_cast<uint8_t>(amp * (upper - lower) + lower) : 0;
     }
@@ -67,6 +71,7 @@ namespace ams::controller {
 
             ProControllerColours m_colours;
             bool m_enable_rumble;
+            bool m_swap_dpad_lstick;
 
     };
 
