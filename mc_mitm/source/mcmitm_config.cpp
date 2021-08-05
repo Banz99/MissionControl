@@ -44,7 +44,11 @@ namespace ams::mitm {
             },
             .misc = {
                 .disable_sony_leds = false,
-                .swap_dpad_lstick = false
+                .swap_dpad_lstick = false,
+                .invert_lstick_xaxis = false,
+                .invert_lstick_yaxis = false,
+                .invert_rstick_xaxis = false,
+                .invert_rstick_yaxis = false
             }
         };
 
@@ -181,6 +185,14 @@ namespace ams::mitm {
                     ParseBoolean(value, &config->misc.disable_sony_leds);
                 else if (strcasecmp(name, "swap_dpad_lstick") == 0)
                     ParseBoolean(value, &config->misc.swap_dpad_lstick);
+                else if (strcasecmp(name, "invert_lstick_xaxis") == 0)
+                    ParseBoolean(value, &config->misc.invert_lstick_xaxis);
+                else if (strcasecmp(name, "invert_lstick_yaxis") == 0)
+                    ParseBoolean(value, &config->misc.invert_lstick_yaxis);
+                else if (strcasecmp(name, "invert_rstick_xaxis") == 0)
+                    ParseBoolean(value, &config->misc.invert_rstick_xaxis);
+                else if (strcasecmp(name, "invert_rstick_yaxis") == 0)
+                    ParseBoolean(value, &config->misc.invert_rstick_yaxis);
             }
             else {
                 return 0;
