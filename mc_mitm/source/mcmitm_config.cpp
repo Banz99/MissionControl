@@ -44,6 +44,7 @@ namespace ams::mitm {
             },
             .misc = {
                 .disable_sony_leds = false,
+                .dualshock_pollingrate_divisor = 8,
                 .swap_dpad_lstick = false,
                 .invert_lstick_xaxis = false,
                 .invert_lstick_yaxis = false,
@@ -60,6 +61,18 @@ namespace ams::mitm {
                 *out = true;
             else if (strcasecmp(value, "false") == 0)
                 *out = false;
+        }
+
+        void ParseInt(const char *value, int32_t *out) {
+            *out = atoi(value);
+        }
+
+        void ParsePollingRate(const char *value, int32_t *out){
+            int32_t temp=8;
+            ParseInt(value, &temp);
+            if(temp >= 0 && temp <= 16)
+            *out = temp;
+            else *out = 8;
         }
 
         void ParseFloat(const char *value, float *out) {
@@ -221,6 +234,8 @@ namespace ams::mitm {
                     ParseBoolean(value, &config->misc.disable_sony_leds);
                 else if (strcasecmp(name, "swap_dpad_lstick") == 0)
                     ParseBoolean(value, &config->misc.swap_dpad_lstick);
+                else if (strcasecmp(name, "dualshock_pollingrate_divisor") == 0)
+                    ParsePollingRate(value, &config->misc.dualshock_pollingrate_divisor);
                 else if (strcasecmp(name, "invert_lstick_xaxis") == 0)
                     ParseBoolean(value, &config->misc.invert_lstick_xaxis);
                 else if (strcasecmp(name, "invert_lstick_yaxis") == 0)

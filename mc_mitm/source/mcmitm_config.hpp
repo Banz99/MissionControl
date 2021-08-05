@@ -44,6 +44,7 @@ namespace ams::mitm {
 
         struct {
             bool disable_sony_leds;
+            int32_t dualshock_pollingrate_divisor;
             bool swap_dpad_lstick;
             bool invert_lstick_xaxis;
             bool invert_lstick_yaxis;
