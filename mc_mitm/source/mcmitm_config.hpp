@@ -22,6 +22,10 @@ namespace ams::mitm {
             char host_name[0x20];
             bluetooth::Address host_address;
         } bluetooth;
+
+        struct{
+            bool disable_custom_profiles;
+        } general;
     };
 
     struct ControllerProfileConfig{
