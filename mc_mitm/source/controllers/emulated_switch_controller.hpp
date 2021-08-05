@@ -78,7 +78,7 @@ namespace ams::controller {
             bool m_invert_rstick_yaxis;
             float m_lstick_deadzone;
             float m_rstick_deadzone;
-
+            bool m_disable_home_button;
     };
 
 }

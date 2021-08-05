@@ -51,6 +51,7 @@ namespace ams::mitm {
             bool invert_rstick_yaxis;
             float lstick_deadzone;
             float rstick_deadzone;
+            bool disable_home_button;
         } misc;
     };
 

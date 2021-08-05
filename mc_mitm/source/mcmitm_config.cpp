@@ -50,7 +50,8 @@ namespace ams::mitm {
                 .invert_rstick_xaxis = false,
                 .invert_rstick_yaxis = false,
                 .lstick_deadzone = 0.0f,
-                .rstick_deadzone = 0.0f
+                .rstick_deadzone = 0.0f,
+                .disable_home_button = false
             }
         };
 
@@ -232,6 +233,8 @@ namespace ams::mitm {
                     ParseDeadzone(value, &config->misc.lstick_deadzone);
                 else if (strcasecmp(name, "rstick_deadzone") == 0)
                     ParseDeadzone(value, &config->misc.rstick_deadzone);
+                else if (strcasecmp(name, "disable_home_button") == 0)
+                    ParseBoolean(value, &config->misc.disable_home_button);
             }
             else {
                 return 0;
