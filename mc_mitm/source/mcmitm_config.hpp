@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "bluetooth_mitm/bluetooth/bluetooth_types.hpp"
+#include "controllers/switch_controller.hpp"
 
 namespace ams::mitm {
 
@@ -33,6 +34,13 @@ namespace ams::mitm {
             bool enable_rumble;
             bool enable_motion;
         } general;
+
+        struct{
+            controller::RGBColour body;
+            controller::RGBColour buttons;
+            controller::RGBColour left_grip;
+            controller::RGBColour right_grip;
+        } colours;
 
         struct {
             bool disable_sony_leds;

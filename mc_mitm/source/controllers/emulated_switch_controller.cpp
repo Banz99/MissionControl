@@ -90,13 +90,13 @@ namespace ams::controller {
     , m_battery(BATTERY_MAX) {
         this->ClearControllerState();
 
-        m_colours.body       = {0x32, 0x32, 0x32};
-        m_colours.buttons    = {0xe6, 0xe6, 0xe6};
-        m_colours.left_grip  = {0x46, 0x46, 0x46};
-        m_colours.right_grip = {0x46, 0x46, 0x46};
-
         mitm::ControllerProfileConfig config;
         mitm::GetCustomIniConfig(address,&config);
+
+        m_colours.body = config.colours.body;
+        m_colours.buttons = config.colours.buttons;
+        m_colours.left_grip = config.colours.left_grip;
+        m_colours.right_grip = config.colours.right_grip;
 
         m_enable_rumble = config.general.enable_rumble;
     };
