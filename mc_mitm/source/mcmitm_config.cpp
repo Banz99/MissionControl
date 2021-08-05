@@ -43,6 +43,7 @@ namespace ams::mitm {
                 .right_grip = {0x46, 0x46, 0x46}
             },
             .misc = {
+                .use_western_layout=false,
                 .disable_sony_leds = false,
                 .dualshock_pollingrate_divisor = 8,
                 .swap_dpad_lstick = false,
@@ -230,7 +231,9 @@ namespace ams::mitm {
                     ParseRGBstring(value, &config->colours.right_grip);
             }
             else if (strcasecmp(section, "misc") == 0) {
-                if (strcasecmp(name, "disable_sony_leds") == 0)
+                if (strcasecmp(name, "use_western_layout") == 0)
+                    ParseBoolean(value, &config->misc.use_western_layout);
+                else if (strcasecmp(name, "disable_sony_leds") == 0)
                     ParseBoolean(value, &config->misc.disable_sony_leds);
                 else if (strcasecmp(name, "swap_dpad_lstick") == 0)
                     ParseBoolean(value, &config->misc.swap_dpad_lstick);
