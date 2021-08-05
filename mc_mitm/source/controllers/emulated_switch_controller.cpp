@@ -16,6 +16,7 @@
 #include "emulated_switch_controller.hpp"
 #include "../mcmitm_config.hpp"
 #include <memory>
+#include <cmath>
 
 namespace ams::controller {
 
@@ -104,6 +105,8 @@ namespace ams::controller {
         m_invert_lstick_yaxis = config.misc.invert_lstick_yaxis;
         m_invert_rstick_xaxis = config.misc.invert_rstick_xaxis;
         m_invert_rstick_yaxis = config.misc.invert_rstick_yaxis;
+        m_lstick_deadzone = config.misc.lstick_deadzone;
+        m_rstick_deadzone = config.misc.rstick_deadzone;
     };
 
     void EmulatedSwitchController::ClearControllerState(void) {
@@ -147,6 +150,19 @@ namespace ams::controller {
             switch_report->input0x30.buttons.dpad_right = switch_report->input0x30.left_stick.GetY() > DPAD_THRESHOLD_END ? 1 : 0;
 
             switch_report->input0x30.left_stick.SetData(temp_lstick_x, temp_lstick_y);
+        }
+
+        if (m_lstick_deadzone) {
+            double temp_lstick_x = static_cast<double>(switch_report->input0x30.left_stick.GetX() - STICK_ZERO);
+            double temp_lstick_y = static_cast<double>(switch_report->input0x30.left_stick.GetY() - STICK_ZERO);
+            if (std::hypot(temp_lstick_x, temp_lstick_y) < (static_cast<double>(STICK_ZERO) * m_lstick_deadzone))
+                switch_report->input0x30.left_stick.SetData(STICK_ZERO, STICK_ZERO);
+        }
+        if (m_rstick_deadzone) {
+            double temp_rstick_x = static_cast<double>(switch_report->input0x30.right_stick.GetX() - STICK_ZERO);
+            double temp_rstick_y = static_cast<double>(switch_report->input0x30.right_stick.GetY() - STICK_ZERO);
+            if (std::hypot(temp_rstick_x, temp_rstick_y) < (static_cast<double>(STICK_ZERO) * m_rstick_deadzone))
+                switch_report->input0x30.right_stick.SetData(STICK_ZERO, STICK_ZERO);
         }
 
         if (m_invert_lstick_xaxis)

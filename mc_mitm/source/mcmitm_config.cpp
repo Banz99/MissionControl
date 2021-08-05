@@ -48,7 +48,9 @@ namespace ams::mitm {
                 .invert_lstick_xaxis = false,
                 .invert_lstick_yaxis = false,
                 .invert_rstick_xaxis = false,
-                .invert_rstick_yaxis = false
+                .invert_rstick_yaxis = false,
+                .lstick_deadzone = 0.0f,
+                .rstick_deadzone = 0.0f
             }
         };
 
@@ -57,6 +59,39 @@ namespace ams::mitm {
                 *out = true;
             else if (strcasecmp(value, "false") == 0)
                 *out = false;
+        }
+
+        void ParseFloat(const char *value, float *out) {
+            uint32_t val_len = strlen(value);
+            float temp;
+            bool multiply = true;
+            uint32_t divide = 10;
+            for (uint32_t i = 0; i < val_len; ++i) {
+                if(value[i] >= '0' && value[i] <= '9') {
+                    temp = multiply ? temp * 10 : temp;
+                    temp += multiply ? value[i] - '0' : (float)(value[i] - '0') / (float)divide;
+                    if(!multiply){
+                        divide *= 10;
+                    }
+                }
+                else if(value[i] == '.') {
+                    multiply = false;
+                }
+                else {
+                    *out = 0.0f;
+                    return;
+                }
+            }
+            *out = temp;
+        }
+
+        void ParseDeadzone(const char *value, float *out){
+            float temp=0.0f;
+            ParseFloat(value, &temp);
+            temp /= 100;
+            if (temp > 0.0f && temp < 1.0f)
+                *out = temp;
+            else *out = 0.0f;
         }
 
         void ParseRGBstring(const char* value, controller::RGBColour *out){
@@ -193,6 +228,10 @@ namespace ams::mitm {
                     ParseBoolean(value, &config->misc.invert_rstick_xaxis);
                 else if (strcasecmp(name, "invert_rstick_yaxis") == 0)
                     ParseBoolean(value, &config->misc.invert_rstick_yaxis);
+                else if (strcasecmp(name, "lstick_deadzone") == 0)
+                    ParseDeadzone(value, &config->misc.lstick_deadzone);
+                else if (strcasecmp(name, "rstick_deadzone") == 0)
+                    ParseDeadzone(value, &config->misc.rstick_deadzone);
             }
             else {
                 return 0;

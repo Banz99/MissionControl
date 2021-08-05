@@ -76,6 +76,8 @@ namespace ams::controller {
             bool m_invert_lstick_yaxis;
             bool m_invert_rstick_xaxis;
             bool m_invert_rstick_yaxis;
+            float m_lstick_deadzone;
+            float m_rstick_deadzone;
 
     };
 
