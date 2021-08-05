@@ -44,8 +44,8 @@ namespace ams::mitm {
 
         struct {
             bool use_western_layout;
-            int32_t sony_led_brightness;
-            int32_t dualshock_pollingrate_divisor;
+            uint32_t sony_led_brightness;
+            uint32_t dualshock_pollingrate_divisor;
             bool swap_dpad_lstick;
             bool invert_lstick_xaxis;
             bool invert_lstick_yaxis;

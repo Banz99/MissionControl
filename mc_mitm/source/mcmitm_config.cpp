@@ -68,7 +68,7 @@ namespace ams::mitm {
             *out = atoi(value);
         }
 
-        void ParsePollingRate(const char *value, int32_t *out){
+        void ParsePollingRate(const char *value, uint32_t *out){
             int32_t temp=8;
             ParseInt(value, &temp);
             if(temp >= 0 && temp <= 16)
@@ -76,7 +76,7 @@ namespace ams::mitm {
             else *out = 8;
         }
 
-        void ParseBrightness(const char *value, int32_t *out){
+        void ParseBrightness(const char *value, uint32_t *out) {
             int32_t temp=8;
             ParseInt(value, &temp);
             if(temp >= 0 && temp <= 63)
@@ -117,7 +117,7 @@ namespace ams::mitm {
             else *out = 0.0f;
         }
 
-        void ParseRGBstring(const char* value, controller::RGBColour *out){
+        void ParseRGBstring(const char* value, controller::RGBColour *out) {
             uint8_t temp[3];
             if (std::strncmp(value, "rgb(", 4) == 0) {
                  value+=4;
@@ -126,20 +126,20 @@ namespace ams::mitm {
                  temp[0] = 0;
                  temp[1] = 0;
                  temp[2] = 0;
-                 while(i<str_len && value[i] !=')' && k <= 2){
-                    if(value[i] >= '0' && value[i] <= '9') {
+                 while (i < str_len && value[i] !=')' && k <= 2){
+                    if (value[i] >= '0' && value[i] <= '9') {
                          temp[k] *= 10;
                          temp[k] += value[i] - '0';
 
                     }
-                    else if(value[i] == ','){
+                    else if (value[i] == ','){
                         k++;
                     }
-                    else if(value[i] != ' ') //Ignore spaces if found
+                    else if (value[i] != ' ') //Ignore spaces if found
                         return;
                     i++;
                  }
-                 if(k==2){
+                 if (k == 2){
                     out->r = temp[0];
                     out->g = temp[1];
                     out->b = temp[2];
@@ -147,7 +147,7 @@ namespace ams::mitm {
             }
             else if (value[0] == '#') {
                 char buf[2 + 1];
-                if(strlen(value)>=7){
+                if (strlen(value) >= 7) {
                     std::memcpy(buf, value + 1, 2);
                     temp[0] = static_cast<uint8_t>(std::strtoul(buf, nullptr, 16));
                     std::memcpy(buf, value + 3, 2);
@@ -164,7 +164,7 @@ namespace ams::mitm {
         }
 
         Result StringifyBluetoothAddress(const bluetooth::Address *address, char *out, size_t out_size) {
-            if(out_size < 2*sizeof(bluetooth::Address) + 1)
+            if (out_size < 2*sizeof(bluetooth::Address) + 1)
                 return -1;
 
             char ch;
