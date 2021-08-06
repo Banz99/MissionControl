@@ -59,7 +59,7 @@ namespace ams::controller {
         if (switch_report->id == 0x30) {
             this->ApplyButtonCombos(&switch_report->input0x30.buttons);
             /* TODO: Apply those when there are profiles working here as well
-            this->ApplyButtonHoldMask(&switch_report->input0x30.buttons);
+            this->ApplyButtonHoldandTurboMask(&switch_report->input0x30.buttons);
             this->ApplyButtonInversionMask(&switch_report->input0x30.buttons);
             */
         }
@@ -93,12 +93,12 @@ namespace ams::controller {
         *buttons = *(reinterpret_cast<SwitchButtonData*>(&buttonsbits));
     }
 
-    void SwitchController::ApplyButtonHoldMask(SwitchButtonData *buttons) {
+    void SwitchController::ApplyButtonHoldandTurboMask(SwitchButtonData *buttons) {
         uint32_t buttonsbits = (*reinterpret_cast<uint32_t*>(buttons)) & 0xffffff;
-        uint32_t prev_state = m_previous_button_state;
         uint32_t hold_state = m_button_holding_state;
         m_button_holding_state = buttonsbits;
-        buttonsbits = (prev_state & m_hold_enable_mask & ~buttonsbits) | (~prev_state & buttonsbits & ~hold_state) | (buttonsbits & prev_state & hold_state) | (~m_hold_enable_mask & buttonsbits);
+        buttonsbits = (~m_hold_enable_mask & ~m_turbo_enable_mask & buttonsbits) | (~m_hold_enable_mask & ~m_previous_button_state_2 & buttonsbits) | (m_hold_enable_mask & m_previous_button_state & ~buttonsbits) | (m_hold_enable_mask & m_previous_button_state & hold_state) | (~m_turbo_enable_mask & ~m_previous_button_state & ~hold_state & buttonsbits); //http://www.32x8.com/sop6_____A-B-C-D-E-F_____m_1-3-5-7-9-11-13-15-17-20-22-23-25-28-30-31-33-35-37-39_____d_48-49-50-51-52-53-54-55-56-57-58-59-60-61-62-63_____option-0_____989781966478857295708 (A = turbo B = hold C = prev_state_2 D = prev_state E = holding_btns F = input)
+        m_previous_button_state_2 = m_previous_button_state;
         m_previous_button_state = buttonsbits;
         *buttons = *(reinterpret_cast<SwitchButtonData*>(&buttonsbits));
     }

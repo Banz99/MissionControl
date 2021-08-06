@@ -112,6 +112,7 @@ namespace ams::controller {
 
         m_hold_enable_mask = config.misc.hold_enable_mask;
         m_inversion_enable_mask = config.misc.inversion_enable_mask;
+        m_turbo_enable_mask = config.misc.turbo_enable_mask;
     };
 
     void EmulatedSwitchController::ClearControllerState(void) {
@@ -139,7 +140,7 @@ namespace ams::controller {
             switch_report->input0x30.buttons.home = 0;
 
         this->ApplyButtonCombos(&switch_report->input0x30.buttons);
-        this->ApplyButtonHoldMask(&switch_report->input0x30.buttons);
+        this->ApplyButtonHoldandTurboMask(&switch_report->input0x30.buttons);
         this->ApplyButtonInversionMask(&switch_report->input0x30.buttons);
 
         if(m_use_western_layout) {

@@ -260,7 +260,9 @@ namespace ams::controller {
                 : m_address(*address)
                 , m_inversion_enable_mask(0)
                 , m_hold_enable_mask(0)
+                , m_turbo_enable_mask(0)
                 , m_previous_button_state(0)
+                , m_previous_button_state_2(0)
                 , m_button_holding_state(0) { };
 
             const bluetooth::Address& Address(void) const { return m_address; }
@@ -275,12 +277,14 @@ namespace ams::controller {
         protected:
             virtual void ApplyButtonCombos(SwitchButtonData *buttons);
             virtual void ApplyButtonInversionMask(SwitchButtonData *buttons);
-            virtual void ApplyButtonHoldMask(SwitchButtonData *buttons);
+            virtual void ApplyButtonHoldandTurboMask(SwitchButtonData *buttons);
 
             bluetooth::Address m_address;
             uint32_t m_inversion_enable_mask;
             uint32_t m_hold_enable_mask;
+            uint32_t m_turbo_enable_mask;
             uint32_t m_previous_button_state;
+            uint32_t m_previous_button_state_2;
             uint32_t m_button_holding_state;
 
             static bluetooth::HidReport s_input_report;

@@ -55,7 +55,8 @@ namespace ams::mitm {
                 .rstick_deadzone = 0.0f,
                 .disable_home_button = false,
                 .hold_enable_mask = 0,
-                .inversion_enable_mask = 0
+                .inversion_enable_mask = 0,
+                .turbo_enable_mask = 0
             }
         };
 
@@ -275,6 +276,8 @@ namespace ams::mitm {
                     ParseButtonBitMask(value, &config->misc.hold_enable_mask);
                 else if (strcasecmp(name, "inversion_enable_mask") == 0)
                     ParseButtonBitMask(value, &config->misc.inversion_enable_mask);
+                else if (strcasecmp(name, "turbo_enable_mask") == 0)
+                    ParseButtonBitMask(value, &config->misc.turbo_enable_mask);
             }
             else {
                 return 0;

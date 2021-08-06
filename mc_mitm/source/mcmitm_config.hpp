@@ -56,6 +56,7 @@ namespace ams::mitm {
             bool disable_home_button;
             uint32_t hold_enable_mask;
             uint32_t inversion_enable_mask;
+            uint32_t turbo_enable_mask;
         } misc;
     };
 
