@@ -58,6 +58,10 @@ namespace ams::controller {
         auto switch_report = reinterpret_cast<SwitchReportData *>(s_input_report.data);
         if (switch_report->id == 0x30) {
             this->ApplyButtonCombos(&switch_report->input0x30.buttons);
+            /* TODO: Apply those when there are profiles working here as well
+            this->ApplyButtonHoldMask(&switch_report->input0x30.buttons);
+            this->ApplyButtonInversionMask(&switch_report->input0x30.buttons);
+            */
         }
 
         return bluetooth::hid::report::WriteHidReportBuffer(&m_address, &s_input_report);
@@ -81,6 +85,22 @@ namespace ams::controller {
             buttons->minus = 0;
             buttons->dpad_up = 0;
         }
+    }
+
+    void SwitchController::ApplyButtonInversionMask(SwitchButtonData *buttons) {
+        uint32_t buttonsbits = (*reinterpret_cast<uint32_t*>(buttons)) & 0xffffff;
+        buttonsbits = buttonsbits ^ m_inversion_enable_mask;
+        *buttons = *(reinterpret_cast<SwitchButtonData*>(&buttonsbits));
+    }
+
+    void SwitchController::ApplyButtonHoldMask(SwitchButtonData *buttons) {
+        uint32_t buttonsbits = (*reinterpret_cast<uint32_t*>(buttons)) & 0xffffff;
+        uint32_t prev_state = m_previous_button_state;
+        uint32_t hold_state = m_button_holding_state;
+        m_button_holding_state = buttonsbits;
+        buttonsbits = (prev_state & m_hold_enable_mask & ~buttonsbits) | (~prev_state & buttonsbits & ~hold_state) | (buttonsbits & prev_state & hold_state) | (~m_hold_enable_mask & buttonsbits);
+        m_previous_button_state = buttonsbits;
+        *buttons = *(reinterpret_cast<SwitchButtonData*>(&buttonsbits));
     }
 
 }

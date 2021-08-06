@@ -54,6 +54,8 @@ namespace ams::mitm {
             float lstick_deadzone;
             float rstick_deadzone;
             bool disable_home_button;
+            uint32_t hold_enable_mask;
+            uint32_t inversion_enable_mask;
         } misc;
     };
 

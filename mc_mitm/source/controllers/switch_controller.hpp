@@ -51,7 +51,7 @@ namespace ams::controller {
         RGBColour left_grip;
         RGBColour right_grip;
     } __attribute__ ((__packed__));
-        
+
     struct SwitchButtonData {
         uint8_t Y              : 1;
         uint8_t X              : 1;
@@ -248,8 +248,8 @@ namespace ams::controller {
 
     class SwitchController {
 
-        public: 
-            static constexpr const HardwareID hardware_ids[] = { 
+        public:
+            static constexpr const HardwareID hardware_ids[] = {
                 {0x057e, 0x2006},   // Official Joycon(L) Controller
                 {0x057e, 0x2007},   // Official Joycon(R) Controller/NES Online Controller
                 {0x057e, 0x2009},   // Official Switch Pro Controller
@@ -257,7 +257,11 @@ namespace ams::controller {
             };
 
             SwitchController(const bluetooth::Address *address)
-                : m_address(*address) { };
+                : m_address(*address)
+                , m_inversion_enable_mask(0)
+                , m_hold_enable_mask(0)
+                , m_previous_button_state(0)
+                , m_button_holding_state(0) { };
 
             const bluetooth::Address& Address(void) const { return m_address; }
 
@@ -270,8 +274,14 @@ namespace ams::controller {
 
         protected:
             virtual void ApplyButtonCombos(SwitchButtonData *buttons);
+            virtual void ApplyButtonInversionMask(SwitchButtonData *buttons);
+            virtual void ApplyButtonHoldMask(SwitchButtonData *buttons);
 
             bluetooth::Address m_address;
+            uint32_t m_inversion_enable_mask;
+            uint32_t m_hold_enable_mask;
+            uint32_t m_previous_button_state;
+            uint32_t m_button_holding_state;
 
             static bluetooth::HidReport s_input_report;
             static bluetooth::HidReport s_output_report;

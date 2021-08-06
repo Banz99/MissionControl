@@ -53,7 +53,9 @@ namespace ams::mitm {
                 .invert_rstick_yaxis = false,
                 .lstick_deadzone = 0.0f,
                 .rstick_deadzone = 0.0f,
-                .disable_home_button = false
+                .disable_home_button = false,
+                .hold_enable_mask = 0,
+                .inversion_enable_mask = 0
             }
         };
 
@@ -115,6 +117,14 @@ namespace ams::mitm {
             if (temp > 0.0f && temp < 1.0f)
                 *out = temp;
             else *out = 0.0f;
+        }
+
+        void ParseButtonBitMask(const char *value, uint32_t *out) {
+            int32_t temp=0;
+            ParseInt(value, &temp);
+            if(temp >= 0 && temp <= 0xffffff)
+                *out = temp;
+            else *out = 0;
         }
 
         void ParseRGBstring(const char* value, controller::RGBColour *out) {
@@ -261,6 +271,10 @@ namespace ams::mitm {
                     ParseDeadzone(value, &config->misc.rstick_deadzone);
                 else if (strcasecmp(name, "disable_home_button") == 0)
                     ParseBoolean(value, &config->misc.disable_home_button);
+                else if (strcasecmp(name, "hold_enable_mask") == 0)
+                    ParseButtonBitMask(value, &config->misc.hold_enable_mask);
+                else if (strcasecmp(name, "inversion_enable_mask") == 0)
+                    ParseButtonBitMask(value, &config->misc.inversion_enable_mask);
             }
             else {
                 return 0;
