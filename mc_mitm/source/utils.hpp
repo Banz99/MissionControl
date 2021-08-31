@@ -14,13 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stratosphere.hpp>
-#include "bluetooth_mitm/bluetooth/bluetooth_types.hpp"
 
 namespace ams::utils {
 
     s32 ConvertToHorizonPriority(s32 user_priority);
     s32 ConvertToUserPriority(s32 horizon_priority);
-
-    Result BluetoothAddressToString(const bluetooth::Address *address, char *out, size_t out_size);
 
 }

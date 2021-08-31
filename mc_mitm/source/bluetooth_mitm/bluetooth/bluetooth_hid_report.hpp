@@ -16,7 +16,7 @@
 #pragma once
 #include <switch.h>
 #include <stratosphere.hpp>
-#include "bluetooth_types.hpp"
+#include "../../../../common/bluetooth_types.hpp"
 
 namespace ams::bluetooth::hid::report {
 

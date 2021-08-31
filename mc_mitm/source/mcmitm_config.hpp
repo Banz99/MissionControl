@@ -13,8 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "bluetooth_mitm/bluetooth/bluetooth_types.hpp"
-#include "controllers/switch_controller.hpp"
+#include "../../common/bluetooth_types.hpp"
 
 namespace ams::mitm {
 
@@ -29,36 +28,7 @@ namespace ams::mitm {
         } general;
     };
 
-    struct ControllerProfileConfig{
-         struct {
-            bool enable_rumble;
-            bool enable_motion;
-        } general;
-
-        struct{
-            controller::RGBColour body;
-            controller::RGBColour buttons;
-            controller::RGBColour left_grip;
-            controller::RGBColour right_grip;
-        } colours;
-
-        struct {
-            bool use_western_layout;
-            uint32_t sony_led_brightness;
-            uint32_t dualshock_pollingrate_divisor;
-            bool swap_dpad_lstick;
-            bool invert_lstick_xaxis;
-            bool invert_lstick_yaxis;
-            bool invert_rstick_xaxis;
-            bool invert_rstick_yaxis;
-            float lstick_deadzone;
-            float rstick_deadzone;
-            bool disable_home_button;
-        } misc;
-    };
-
     MissionControlConfig *GetGlobalConfig(void);
-    Result GetCustomIniConfig(const bluetooth::Address *address, ControllerProfileConfig *config);
     void ParseIniConfig(void);
 
 }

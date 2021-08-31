@@ -50,7 +50,7 @@ namespace ams::controller {
         uint8_t options    : 1;
         uint8_t L3         : 1;
         uint8_t R3         : 1;
-        
+
         uint8_t ps         : 1;
         uint8_t tpad       : 1;
         uint8_t counter    : 6;
@@ -127,6 +127,7 @@ namespace ams::controller {
             Result SetLightbarColour(RGBColour colour);
 
             void UpdateControllerState(const bluetooth::HidReport *report);
+            void ReadControllerProfile();
 
         private:
             void HandleInputReport0x01(const DualsenseReportData *src);
@@ -138,7 +139,7 @@ namespace ams::controller {
 
             uint8_t m_led_flags;
             RGBColour m_led_colour;
-            DualsenseRumbleData m_rumble_state; 
+            DualsenseRumbleData m_rumble_state;
     };
 
 }

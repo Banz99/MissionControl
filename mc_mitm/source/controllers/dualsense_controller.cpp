@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "dualsense_controller.hpp"
-#include "../mcmitm_config.hpp"
 #include <stratosphere.hpp>
 
 namespace ams::controller {
@@ -80,11 +79,9 @@ namespace ams::controller {
     }
 
     Result DualsenseController::SetLightbarColour(RGBColour colour) {
-        mitm::ControllerProfileConfig config;
-        mitm::GetCustomIniConfig(&this->Address(), &config);
-        m_led_colour.r = colour.r * config.misc.sony_led_brightness;
-        m_led_colour.g = colour.g * config.misc.sony_led_brightness;
-        m_led_colour.b = colour.b * config.misc.sony_led_brightness;
+        m_led_colour.r = colour.r * m_current_config.misc.sony_led_brightness;
+        m_led_colour.g = colour.g * m_current_config.misc.sony_led_brightness;
+        m_led_colour.b = colour.b * m_current_config.misc.sony_led_brightness;
         return this->PushRumbleLedState();
     }
 
@@ -192,4 +189,12 @@ namespace ams::controller {
         return bluetooth::hid::report::SendHidReport(&m_address, &s_output_report);
     }
 
+    void DualsenseController::ReadControllerProfile() {
+        profiles::ControllerProfileConfig config = profiles::g_cp_global_config;
+
+        config.misc.sony_led_brightness = 8,
+
+        profiles::GetCustomIniConfig(&m_address,&config);
+        m_current_config = config;
+    }
 }

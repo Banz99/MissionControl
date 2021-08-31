@@ -14,27 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #pragma once
-#include <switch.h>
+#include "switch_analog_stick.hpp"
+#include "../../../common/bluetooth_types.hpp"
 
 namespace ams::controller {
 
-    constexpr auto UINT12_MAX  = 0xfff;
-    constexpr auto STICK_ZERO  = 0x800;
-
-    struct SwitchAnalogStick {
-        void SetData(uint16_t x, uint16_t y);
-        void SetX(uint16_t x);
-        void SetY(uint16_t y);
-        uint16_t GetX(void);
-        uint16_t GetY(void);
-        void InvertX(void);
-        void InvertY(void);
-
-        uint8_t m_xy[3];
-    };
-
-    struct SwitchAnalogStickFactoryCalibration {
-        uint8_t calib[9];
-    };
-
+    Result OpenSPIFile(const bluetooth::Address *address, fs::FileHandle *spi_flash_file, SwitchAnalogStickFactoryCalibration *lstick_factory_calib, SwitchAnalogStickFactoryCalibration *rstick_factory_calib);
+    Result CloseSPIFile(fs::FileHandle spi_flash_file);
 }

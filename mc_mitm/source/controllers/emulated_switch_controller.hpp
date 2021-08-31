@@ -40,10 +40,11 @@ namespace ams::controller {
 
         protected:
             void ClearControllerState(void);
-            virtual void UpdateControllerState(const bluetooth::HidReport *report) { }
+            virtual void UpdateControllerState(const bluetooth::HidReport *report) {}
             virtual Result SetVibration(const SwitchRumbleData *rumble_data) { return ams::ResultSuccess(); }
-            virtual Result CancelVibration(void) { return ams::ResultSuccess(); }
+            virtual Result CancelVibration(void) { return ams::ResultSuccess(); };
             virtual Result SetPlayerLed(uint8_t led_mask) { return ams::ResultSuccess(); }
+            virtual void ReadControllerProfile();
 
             Result HandleSubCmdReport(const bluetooth::HidReport *report);
             Result HandleRumbleReport(const bluetooth::HidReport *report);
@@ -75,21 +76,7 @@ namespace ams::controller {
             SwitchAnalogStick m_right_stick;
             Switch6AxisData m_motion_data[3];
 
-            ProControllerColours m_colours;
-            bool m_enable_rumble;
-
             fs::FileHandle m_spi_flash_file;
-
-            bool m_use_western_layout;
-            bool m_swap_dpad_lstick;
-            bool m_invert_lstick_xaxis;
-            bool m_invert_lstick_yaxis;
-            bool m_invert_rstick_xaxis;
-            bool m_invert_rstick_yaxis;
-            float m_lstick_deadzone;
-            float m_rstick_deadzone;
-            bool m_disable_home_button;
-
     };
 
 }

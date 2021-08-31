@@ -14,16 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "emulated_switch_controller.hpp"
-#include "../utils.hpp"
-#include "../mcmitm_config.hpp"
+#include "virtual_spi_management.hpp"
 #include <memory>
 #include <cmath>
 
 namespace ams::controller {
 
     namespace {
-
-        constexpr const char *controller_base_path = "sdmc:/config/MissionControl/controllers/";
 
         // Factory calibration data representing analog stick ranges that span the entire 12-bit data type in x and y
         SwitchAnalogStickFactoryCalibration lstick_factory_calib = {0xff, 0xf7, 0x7f, 0x00, 0x08, 0x80, 0x00, 0x08, 0x80};
@@ -85,48 +82,6 @@ namespace ams::controller {
             dec->low_band_freq  = float(rumble_freq_lut[lo_freq_ind]);
             dec->low_band_amp   = rumble_amp_lut_f[lo_amp_ind];
         }
-
-        Result InitializeVirtualSpiFlash(const char *path, size_t size) {
-            fs::FileHandle file;
-
-            // Open the file for write
-            R_TRY(fs::OpenFile(std::addressof(file), path, fs::OpenMode_Write));
-            ON_SCOPE_EXIT { fs::CloseFile(file); };
-
-            // Fill the file with 0xff
-            uint8_t buff[64];
-            std::memset(buff, 0xff, sizeof(buff));
-
-            unsigned int offset = 0;
-            while (offset < size) {
-                size_t write_size = std::min(static_cast<size_t>(size - offset), sizeof(buff));
-                R_TRY(fs::WriteFile(file, offset, buff, write_size, fs::WriteOption::None));
-                offset += write_size;
-            }
-
-            // Write default values for data that the console attempts to read in practice
-            const struct {
-                SwitchAnalogStickFactoryCalibration lstick_factory_calib;
-                SwitchAnalogStickFactoryCalibration rstick_factory_calib;
-                uint8_t unused;
-                RGBColour body;
-                RGBColour buttons;
-            } data1 = { lstick_factory_calib, rstick_factory_calib, 0xff, {0x32, 0x32, 0x32,}, {0xff, 0xff, 0xff} };
-            R_TRY(fs::WriteFile(file, 0x603d, &data1, sizeof(data1), fs::WriteOption::None));
-
-            const struct {
-                RGBColour body;
-                RGBColour buttons;
-                RGBColour left_grip;
-                RGBColour right_grip;
-            } data2 = { {0x32, 0x32, 0x32}, {0xe6, 0xe6, 0xe6}, {0x46, 0x46, 0x46}, {0x46, 0x46, 0x46} };
-            R_TRY(fs::WriteFile(file, 0x6050, &data2, sizeof(data2), fs::WriteOption::None));
-
-            R_TRY(fs::FlushFile(file));
-
-            return ams::ResultSuccess();
-        }
-
     }
 
     EmulatedSwitchController::EmulatedSwitchController(const bluetooth::Address *address, HardwareID id)
@@ -134,59 +89,16 @@ namespace ams::controller {
     , m_charging(false)
     , m_battery(BATTERY_MAX) {
         this->ClearControllerState();
-
-        mitm::ControllerProfileConfig config;
-        mitm::GetCustomIniConfig(address,&config);
-
-        m_colours.body = config.colours.body;
-        m_colours.buttons = config.colours.buttons;
-        m_colours.left_grip = config.colours.left_grip;
-        m_colours.right_grip = config.colours.right_grip;
-
-        m_enable_rumble = config.general.enable_rumble;
-        m_use_western_layout = config.misc.use_western_layout;
-        m_swap_dpad_lstick = config.misc.swap_dpad_lstick;
-        m_invert_lstick_xaxis = config.misc.invert_lstick_xaxis;
-        m_invert_lstick_yaxis = config.misc.invert_lstick_yaxis;
-        m_invert_rstick_xaxis = config.misc.invert_rstick_xaxis;
-        m_invert_rstick_yaxis = config.misc.invert_rstick_yaxis;
-        m_lstick_deadzone = config.misc.lstick_deadzone;
-        m_rstick_deadzone = config.misc.rstick_deadzone;
-        m_disable_home_button = config.misc.disable_home_button;
     };
 
     EmulatedSwitchController::~EmulatedSwitchController() {
-        fs::CloseFile(m_spi_flash_file);
+        CloseSPIFile(m_spi_flash_file);
     }
 
     Result EmulatedSwitchController::Initialize(void) {
-        char path[0x100] = {};
-
-        // Check if directory for this controller exists and create it if not
-        bool dir_exists;
-        std::strcat(path, controller_base_path);
-        utils::BluetoothAddressToString(&m_address, path+std::strlen(path), sizeof(path)-std::strlen(path));
-        R_TRY(fs::HasDirectory(&dir_exists, path));
-        if (!dir_exists) {
-            R_TRY(fs::CreateDirectory(path));
-        }
-
+        this->ReadControllerProfile();
         // Check if the virtual spi flash file already exists and initialise it if not
-        bool file_exists;
-        std::strcat(path, "/spi_flash.bin");
-        R_TRY(fs::HasFile(&file_exists, path));
-        if (!file_exists) {
-            auto spi_flash_size = 0x10000;
-            // Create file representing first 64KB of SPI flash
-            R_TRY(fs::CreateFile(path, spi_flash_size));
-
-            // Initialise the spi flash data
-            R_TRY(InitializeVirtualSpiFlash(path, spi_flash_size));
-        }
-
-        // Open the virtual spi flash file for read and write
-        R_TRY(fs::OpenFile(std::addressof(m_spi_flash_file), path, fs::OpenMode_ReadWrite));
-
+        OpenSPIFile(&m_address, &m_spi_flash_file, &lstick_factory_calib, &rstick_factory_calib);
         return ams::ResultSuccess();
     }
 
@@ -211,12 +123,12 @@ namespace ams::controller {
         switch_report->input0x30.right_stick    = m_right_stick;
         std::memcpy(&switch_report->input0x30.motion, &m_motion_data, sizeof(m_motion_data));
 
-        if (m_disable_home_button)
+        if (m_current_config.misc.disable_home_button)
             switch_report->input0x30.buttons.home = 0;
 
         this->ApplyButtonCombos(&switch_report->input0x30.buttons);
 
-        if(m_use_western_layout) {
+        if (m_current_config.misc.use_western_layout) {
             uint8_t temp = switch_report->input0x30.buttons.A;
             switch_report->input0x30.buttons.A = switch_report->input0x30.buttons.B;
             switch_report->input0x30.buttons.B = temp;
@@ -225,7 +137,7 @@ namespace ams::controller {
             switch_report->input0x30.buttons.Y = temp;
         }
 
-        if (m_swap_dpad_lstick) {
+        if (m_current_config.misc.swap_dpad_lstick) {
             uint16_t temp_lstick_x = STICK_ZERO; //Start in a neutral position
             uint16_t temp_lstick_y = STICK_ZERO;
             if (switch_report->input0x30.buttons.dpad_down)
@@ -245,26 +157,26 @@ namespace ams::controller {
             switch_report->input0x30.left_stick.SetData(temp_lstick_x, temp_lstick_y);
         }
 
-        if (m_lstick_deadzone) {
+        if (m_current_config.misc.lstick_deadzone) {
             double temp_lstick_x = static_cast<double>(switch_report->input0x30.left_stick.GetX() - STICK_ZERO);
             double temp_lstick_y = static_cast<double>(switch_report->input0x30.left_stick.GetY() - STICK_ZERO);
-            if (std::hypot(temp_lstick_x, temp_lstick_y) < (static_cast<double>(STICK_ZERO) * m_lstick_deadzone))
+            if (std::hypot(temp_lstick_x, temp_lstick_y) < (static_cast<double>(STICK_ZERO) * m_current_config.misc.lstick_deadzone))
                 switch_report->input0x30.left_stick.SetData(STICK_ZERO, STICK_ZERO);
         }
-        if (m_rstick_deadzone) {
+        if (m_current_config.misc.rstick_deadzone) {
             double temp_rstick_x = static_cast<double>(switch_report->input0x30.right_stick.GetX() - STICK_ZERO);
             double temp_rstick_y = static_cast<double>(switch_report->input0x30.right_stick.GetY() - STICK_ZERO);
-            if (std::hypot(temp_rstick_x, temp_rstick_y) < (static_cast<double>(STICK_ZERO) * m_rstick_deadzone))
+            if (std::hypot(temp_rstick_x, temp_rstick_y) < (static_cast<double>(STICK_ZERO) * m_current_config.misc.rstick_deadzone))
                 switch_report->input0x30.right_stick.SetData(STICK_ZERO, STICK_ZERO);
         }
 
-        if (m_invert_lstick_xaxis)
+        if (m_current_config.misc.invert_lstick_xaxis)
             switch_report->input0x30.left_stick.InvertX();
-        if (m_invert_lstick_yaxis)
+        if (m_current_config.misc.invert_lstick_yaxis)
             switch_report->input0x30.left_stick.InvertY();
-        if (m_invert_rstick_xaxis)
+        if (m_current_config.misc.invert_rstick_xaxis)
             switch_report->input0x30.right_stick.InvertX();
-        if (m_invert_rstick_yaxis)
+        if (m_current_config.misc.invert_rstick_yaxis)
             switch_report->input0x30.right_stick.InvertY();
 
         switch_report->input0x30.timer = os::ConvertToTimeSpan(os::GetSystemTick()).GetMilliSeconds() & 0xff;
@@ -335,7 +247,7 @@ namespace ams::controller {
         }
 
         // This report can also contain rumble data
-        if (!m_enable_rumble || *reinterpret_cast<const uint32_t *>(report_data->output0x01.rumble.left_motor) == 0)
+        if (!m_current_config.general.enable_rumble || *reinterpret_cast<const uint32_t *>(report_data->output0x01.rumble.left_motor) == 0)
             return ams::ResultSuccess();
 
         SwitchRumbleData rumble_data;
@@ -345,7 +257,7 @@ namespace ams::controller {
     }
 
     Result EmulatedSwitchController::HandleRumbleReport(const bluetooth::HidReport *report) {
-        if (!m_enable_rumble)
+        if (!m_current_config.general.enable_rumble)
             return ams::ResultSuccess();
 
         auto report_data = reinterpret_cast<const SwitchReportData *>(report->data);
@@ -546,8 +458,18 @@ namespace ams::controller {
         return bluetooth::hid::report::WriteHidReportBuffer(&m_address, &s_input_report);
     }
 
+    void EmulatedSwitchController::ReadControllerProfile() {
+        profiles::ControllerProfileConfig config = profiles::g_cp_global_config;
+        profiles::GetCustomIniConfig(&m_address,&config);
+        m_current_config = config;
+    }
+
     Result EmulatedSwitchController::VirtualSpiFlashRead(int offset, void *data, size_t size) {
-        return fs::ReadFile(m_spi_flash_file, offset, data, size);
+        if (offset == 0x6050) { //Override colour reads with profile values
+            std::memcpy(data, &m_current_config.colours, sizeof(m_current_config.colours));
+            return ams::ResultSuccess();
+        }
+        else return fs::ReadFile(m_spi_flash_file, offset, data, size);
     }
 
     Result EmulatedSwitchController::VirtualSpiFlashWrite(int offset, const void *data, size_t size) {

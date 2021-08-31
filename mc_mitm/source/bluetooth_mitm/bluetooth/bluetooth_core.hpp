@@ -16,7 +16,7 @@
 #pragma once
 #include <switch.h>
 #include <stratosphere.hpp>
-#include "bluetooth_types.hpp"
+#include "../../../../common/bluetooth_types.hpp"
 
 namespace ams::bluetooth::core {
 
@@ -33,5 +33,5 @@ namespace ams::bluetooth::core {
     void SignalFakeEvent(bluetooth::EventType type, const void *data, size_t size);
     Result GetEventInfo(ncm::ProgramId program_id, bluetooth::EventType *type, void *buffer, size_t size);
     void HandleEvent(void);
-   
+
 }

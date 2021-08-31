@@ -15,7 +15,9 @@
  */
 #pragma once
 #include "switch_analog_stick.hpp"
-#include "../bluetooth_mitm/bluetooth/bluetooth_types.hpp"
+#include "../../../common/common_structures.hpp"
+#include "../../../common/controller_profiles_management.hpp"
+#include "../../../common/bluetooth_types.hpp"
 #include "../bluetooth_mitm/bluetooth/bluetooth_hid_report.hpp"
 
 namespace ams::controller {
@@ -39,19 +41,6 @@ namespace ams::controller {
         uint16_t pid;
     };
 
-    struct RGBColour {
-        uint8_t r;
-        uint8_t g;
-        uint8_t b;
-    } __attribute__ ((__packed__));
-
-    struct ProControllerColours {
-        RGBColour body;
-        RGBColour buttons;
-        RGBColour left_grip;
-        RGBColour right_grip;
-    } __attribute__ ((__packed__));
-        
     struct SwitchButtonData {
         uint8_t Y              : 1;
         uint8_t X              : 1;
@@ -257,8 +246,8 @@ namespace ams::controller {
 
     class SwitchController {
 
-        public: 
-            static constexpr const HardwareID hardware_ids[] = { 
+        public:
+            static constexpr const HardwareID hardware_ids[] = {
                 {0x057e, 0x2006},   // Official Joycon(L) Controller
                 {0x057e, 0x2007},   // Official Joycon(R) Controller/NES Online Controller
                 {0x057e, 0x2009},   // Official Switch Pro Controller
@@ -279,6 +268,9 @@ namespace ams::controller {
             virtual Result Initialize(void) { return ams::ResultSuccess(); }
             virtual Result HandleIncomingReport(const bluetooth::HidReport *report);
             virtual Result HandleOutgoingReport(const bluetooth::HidReport *report);
+
+            virtual void ReadControllerProfile() { return; };
+            profiles::ControllerProfileConfig m_current_config;
 
         protected:
             virtual void ApplyButtonCombos(SwitchButtonData *buttons);

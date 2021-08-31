@@ -17,7 +17,7 @@
 #include <switch.h>
 #include <stratosphere.hpp>
 
-#include "bluetooth_types.hpp"
+#include "../../../../common/bluetooth_types.hpp"
 
 namespace ams::bluetooth {
 
@@ -69,7 +69,7 @@ namespace ams::bluetooth {
 
             os::SdkMutex  mutex;
             os::EventType *event;
-            
+
             u8   data[BLUETOOTH_BUFFER_SIZE];
             u32  writeOffset;
             u32  readOffset;

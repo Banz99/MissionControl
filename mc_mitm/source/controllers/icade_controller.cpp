@@ -24,7 +24,7 @@ namespace ams::controller {
         if (icade_report->id == 0x01) {
 
             for (unsigned int i = 0; i < sizeof(icade_report->input0x01.keys); ++i) {
-                
+
                 switch (icade_report->input0x01.keys[i]) {
                     case 0x1a: m_buttons.dpad_up    = 1; break; // w (joystick up pressed)
                     case 0x08: m_buttons.dpad_up    = 0; break; // e (joystick up released)
@@ -79,6 +79,15 @@ namespace ams::controller {
         }
 
         EmulatedSwitchController::ApplyButtonCombos(buttons);
+    }
+
+    void ICadeController::ReadControllerProfile() {
+        profiles::ControllerProfileConfig config = profiles::g_cp_global_config;
+
+        config.misc.swap_dpad_lstick = true;
+
+        profiles::GetCustomIniConfig(&m_address,&config);
+        m_current_config = config;
     }
 
 }

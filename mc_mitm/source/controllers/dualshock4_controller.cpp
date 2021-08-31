@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "dualshock4_controller.hpp"
-#include "../mcmitm_config.hpp"
 #include <switch.h>
 #include <stratosphere.hpp>
 #include <cstring>
@@ -46,10 +45,6 @@ namespace ams::controller {
         R_TRY(EmulatedSwitchController::Initialize());
         R_TRY(this->PushRumbleLedState());
 
-        mitm::ControllerProfileConfig config;
-        mitm::GetCustomIniConfig(&this->Address(), &config);
-        m_report_rate = (Dualshock4ReportRate)config.misc.dualshock_pollingrate_divisor;
-
         return ams::ResultSuccess();
     }
 
@@ -73,11 +68,9 @@ namespace ams::controller {
     }
 
     Result Dualshock4Controller::SetLightbarColour(RGBColour colour) {
-        mitm::ControllerProfileConfig config;
-        mitm::GetCustomIniConfig(&this->Address(), &config);
-        m_led_colour.r = colour.r * config.misc.sony_led_brightness;
-        m_led_colour.g = colour.g * config.misc.sony_led_brightness;
-        m_led_colour.b = colour.b * config.misc.sony_led_brightness;
+        m_led_colour.r = colour.r * m_current_config.misc.sony_led_brightness;
+        m_led_colour.g = colour.g * m_current_config.misc.sony_led_brightness;
+        m_led_colour.b = colour.b * m_current_config.misc.sony_led_brightness;
         return this->PushRumbleLedState();
     }
 
@@ -170,7 +163,7 @@ namespace ams::controller {
     }
 
     Result Dualshock4Controller::PushRumbleLedState(void) {
-        Dualshock4OutputReport0x11 report = {0xa2, 0x11, static_cast<uint8_t>(0xc0 | (m_report_rate & 0xff)), 0x20, 0xf3, 0x04, 0x00,
+        Dualshock4OutputReport0x11 report = {0xa2, 0x11, static_cast<uint8_t>(0xc0 | (static_cast<Dualshock4ReportRate>(m_current_config.misc.dualshock_pollingrate_divisor) & 0xff)), 0x20, 0xf3, 0x04, 0x00,
             m_rumble_state.amp_motor_right, m_rumble_state.amp_motor_left,
             m_led_colour.r, m_led_colour.g, m_led_colour.b
         };
@@ -180,6 +173,16 @@ namespace ams::controller {
         std::memcpy(s_output_report.data, &report.data[1], s_output_report.size);
 
         return bluetooth::hid::report::SendHidReport(&m_address, &s_output_report);
+    }
+
+    void Dualshock4Controller::ReadControllerProfile() {
+        profiles::ControllerProfileConfig config = profiles::g_cp_global_config;
+
+        config.misc.sony_led_brightness = 8,
+        config.misc.dualshock_pollingrate_divisor = 8,
+
+        profiles::GetCustomIniConfig(&m_address,&config);
+        m_current_config = config;
     }
 
 }

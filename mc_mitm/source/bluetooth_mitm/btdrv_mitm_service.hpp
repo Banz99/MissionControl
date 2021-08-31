@@ -15,7 +15,7 @@
  */
 #pragma once
 #include <stratosphere.hpp>
-#include "bluetooth/bluetooth_types.hpp"
+#include "../../../common/bluetooth_types.hpp"
 
 #define AMS_BTDRV_MITM_INTERFACE_INFO(C, H)                                                                                                                                                                                             \
     AMS_SF_METHOD_INFO(C, H, 1,     Result, InitializeBluetooth,              (sf::OutCopyHandle out_handle),                                                           (out_handle))                                                   \
