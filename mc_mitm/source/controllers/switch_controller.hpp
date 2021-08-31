@@ -132,6 +132,16 @@ namespace ams::controller {
                 uint32_t address;
                 uint8_t size;
             } spi_flash_read;
+
+            struct {
+                uint32_t address;
+                uint8_t size;
+                uint8_t data[];
+            } spi_flash_write;
+
+            struct {
+                uint32_t address;
+            } spi_flash_sector_erase;
         };
     } __attribute__ ((__packed__));
 
@@ -240,7 +250,6 @@ namespace ams::controller {
             //SwitchInputReport0x32  input0x32;
             //SwitchInputReport0x33  input0x33;
             //SwitchInputReport0x3f  input0x3f;
-
         };
     } __attribute__ ((__packed__));
 
@@ -256,8 +265,11 @@ namespace ams::controller {
                 {0x057e, 0x2017}    // Official SNES Online Controller
             };
 
-            SwitchController(const bluetooth::Address *address)
-                : m_address(*address) { };
+            SwitchController(const bluetooth::Address *address, HardwareID id)
+            : m_address(*address)
+            , m_id(id) { }
+
+            virtual ~SwitchController() { };
 
             const bluetooth::Address& Address(void) const { return m_address; }
 
@@ -272,6 +284,7 @@ namespace ams::controller {
             virtual void ApplyButtonCombos(SwitchButtonData *buttons);
 
             bluetooth::Address m_address;
+            HardwareID m_id;
 
             static bluetooth::HidReport s_input_report;
             static bluetooth::HidReport s_output_report;
