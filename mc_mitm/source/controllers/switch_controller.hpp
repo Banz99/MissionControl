@@ -303,7 +303,9 @@ namespace ams::controller {
             SwitchController(const bluetooth::Address *address, HardwareID id)
             : m_address(*address)
             , m_id(id)
-            , m_settsi_supported(true) { }
+            , m_settsi_supported(true)
+            , previous_l_state(0)
+            , l_button_toggling(0) { };
 
             virtual ~SwitchController() { };
 
@@ -321,12 +323,15 @@ namespace ams::controller {
 
         protected:
             virtual void ApplyButtonCombos(SwitchButtonData *buttons);
-            virtual void SwapLState(SwitchButtonData *buttons);
+            virtual void CheckLbutton(SwitchButtonData *buttons);
 
             bluetooth::Address m_address;
             HardwareID m_id;
 
             bool m_settsi_supported;
+
+            uint8_t previous_l_state;
+            uint8_t l_button_toggling;
 
             bluetooth::HidReport m_input_report;
             bluetooth::HidReport m_output_report;

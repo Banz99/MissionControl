@@ -212,7 +212,7 @@ namespace ams::controller {
         std::memcpy(&switch_report->input0x30.motion, &m_motion_data, sizeof(m_motion_data));
 
         this->ApplyButtonCombos(&switch_report->input0x30.buttons);
-        this->SwapLState(&switch_report->input0x30.buttons);
+        this->CheckLbutton(&switch_report->input0x30.buttons);
 
         switch_report->input0x30.timer = os::ConvertToTimeSpan(os::GetSystemTick()).GetMilliSeconds() & 0xff;
         return bluetooth::hid::report::WriteHidReportBuffer(&m_address, &m_input_report);
