@@ -51,7 +51,7 @@ namespace ams::controller {
         RGBColour left_grip;
         RGBColour right_grip;
     } __attribute__ ((__packed__));
-        
+
     struct SwitchButtonData {
         uint8_t Y              : 1;
         uint8_t X              : 1;
@@ -290,8 +290,8 @@ namespace ams::controller {
 
     class SwitchController {
 
-        public: 
-            static constexpr const HardwareID hardware_ids[] = { 
+        public:
+            static constexpr const HardwareID hardware_ids[] = {
                 {0x057e, 0x2006},   // Official Joycon(L) Controller
                 {0x057e, 0x2007},   // Official Joycon(R) Controller/NES Online Controller
                 {0x057e, 0x2009},   // Official Switch Pro Controller
@@ -321,6 +321,7 @@ namespace ams::controller {
 
         protected:
             virtual void ApplyButtonCombos(SwitchButtonData *buttons);
+            virtual void SwapLState(SwitchButtonData *buttons);
 
             bluetooth::Address m_address;
             HardwareID m_id;
