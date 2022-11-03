@@ -27,6 +27,11 @@ namespace ams::controller {
             Result HandleDataReportEvent(const bluetooth::HidReportEventInfo *event_info);
             Result HandleOutputDataReport(const bluetooth::HidReport *report);
 
+        private:
+            bool m_is_n64_controller;
+            SwitchAnalogStickParameters m_n64_left_stick_param;
+            uint8_t m_n64_calibrated_zero[3];
+
     };
 
 }
