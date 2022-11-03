@@ -18,6 +18,7 @@
 #include <string>
 
 #include "switch_controller.hpp"
+#include "nso_pro_controller.hpp"
 #include "wii_controller.hpp"
 #include "dualshock4_controller.hpp"
 #include "dualsense_controller.hpp"
@@ -80,6 +81,7 @@ namespace ams::controller {
     ControllerType Identify(const bluetooth::DevicesSettings *device);
     bool IsAllowedDeviceClass(const bluetooth::DeviceClass *cod);
     bool IsOfficialSwitchControllerName(const std::string& name);
+    bool IsNsoControllerName(const std::string& name);
 
     void AttachHandler(const bluetooth::Address *address);
     void RemoveHandler(const bluetooth::Address *address);

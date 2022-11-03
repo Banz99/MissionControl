@@ -16,12 +16,13 @@
 #include "controller_management.hpp"
 #include <stratosphere.hpp>
 #include "../utils.hpp"
+#include "../mcmitm_config.hpp"
 
 namespace ams::controller {
 
     namespace {
 
-        const std::string official_npad_names[] = {
+        const std::vector<std::string> official_npad_names = {
             "NintendoGamepad",
             "Joy-Con",
             "Pro Controller",
@@ -47,6 +48,7 @@ namespace ams::controller {
 
         if (IsOfficialSwitchControllerName(hos::GetVersion() < hos::Version_13_0_0 ? device->name.name : device->name2))
             return ControllerType_Switch;
+
 
         for (auto hwId : WiiController::hardware_ids) {
             if ( (device->vid == hwId.vid) && (device->pid == hwId.pid) ) {
@@ -191,6 +193,15 @@ namespace ams::controller {
         return false;
     }
 
+    bool IsNsoControllerName(const std::string& name) {
+        for (uint32_t i = 4; i < official_npad_names.size(); i++) {
+            if (name.rfind(official_npad_names[i], 0) == 0)
+                return true;
+        }
+
+        return false;
+    }
+
     void AttachHandler(const bluetooth::Address *address) {
         bluetooth::DevicesSettings device_settings;
         R_ABORT_UNLESS(btdrvGetPairedDeviceInfo(*address, &device_settings));
@@ -201,7 +212,9 @@ namespace ams::controller {
 
         switch (Identify(&device_settings)) {
             case ControllerType_Switch:
-                controller = std::make_shared<SwitchController>(address, id);
+                if (mitm::GetGlobalConfig()->misc.spoof_nso_as_pro_controller && IsNsoControllerName(hos::GetVersion() < hos::Version_13_0_0 ? device_settings.name.name : device_settings.name2))
+                    controller = std::make_shared<NSOProController>(address, id);
+                else controller = std::make_shared<SwitchController>(address, id);
                 break;
             case ControllerType_Wii:
                 controller = std::make_shared<WiiController>(address, id);
