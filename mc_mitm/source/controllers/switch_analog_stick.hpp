@@ -44,6 +44,10 @@ namespace ams::controller {
             static constexpr u16 MaximumValue = 0xFFF;
             static constexpr u16 CenterValue  = std::midpoint(MinimumValue, MaximumValue);
 
+            static constexpr u16 DpadThresholdBegin = CenterValue - MaximumValue / 4;
+            static constexpr u16 DpadThresholdEnd   = CenterValue + MaximumValue / 4;
+
+
             struct CalibrationValues {
                 utils::BitPackedPair maximum;
                 utils::BitPackedPair origin;

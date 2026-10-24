@@ -217,8 +217,7 @@ namespace ams::controller {
     Result Dualshock3Controller::SetPlayerLed(SwitchPlayerNumber player_number) {
         u8 player_index = static_cast<u8>(player_number);
 
-        auto config = mitm::GetGlobalConfig();
-        switch(config->misc.dualshock3_led_mode) {
+        switch(m_profile.misc.dualshock3_led_mode) {
             case Dualshock3LedMode_Switch:
                 m_led_mask = SwitchPlayerLedPatterns[player_index];
                 break;

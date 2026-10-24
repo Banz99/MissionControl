@@ -20,8 +20,7 @@ namespace ams::mitm {
 
     struct MissionControlConfig {
         struct {
-            bool enable_rumble;
-            bool enable_motion;
+            bool disable_custom_profiles;
         } general;
 
         struct {
@@ -30,15 +29,7 @@ namespace ams::mitm {
         } bluetooth;
 
         struct {
-            int analog_trigger_activation_threshold;
             bool dualshock3_enable_usb_pairing;
-            int dualshock3_led_mode;
-            int dualshock4_polling_rate;
-            int dualshock4_lightbar_brightness;
-            int dualsense_lightbar_brightness;
-            bool dualsense_enable_player_leds;
-            int dualsense_vibration_intensity;
-            int dualsense_adaptive_trigger_travel;
         } misc;
     };
 

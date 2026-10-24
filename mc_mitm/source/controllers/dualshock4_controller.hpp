@@ -192,9 +192,7 @@ namespace ams::controller {
             };
 
             Dualshock4Controller(bluetooth::Address address, HardwareID id) : EmulatedSwitchController(address, id)
-            , m_report_rate(Dualshock4ReportRate_125Hz)
             , m_lightbar_colour({0, 0, 0})
-            , m_lightbar_brightness(0)
             , m_rumble_state({0, 0}) { }
 
             virtual Result Initialize() override;
@@ -213,9 +211,7 @@ namespace ams::controller {
             Result GetCalibrationData(Dualshock4ImuCalibrationData *calibration);
             Result PushRumbleLedState();
 
-            Dualshock4ReportRate m_report_rate;
             RGBColour m_lightbar_colour;
-            u8 m_lightbar_brightness;
             Dualshock4RumbleData m_rumble_state;
 
             Dualshock4ImuCalibrationData m_motion_calibration;

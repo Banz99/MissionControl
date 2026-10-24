@@ -156,7 +156,6 @@ namespace ams::controller {
             DualsenseController(bluetooth::Address address, HardwareID id) : EmulatedSwitchController(address, id)
             , m_led_flags(0)
             , m_lightbar_colour({0, 0, 0})
-            , m_lightbar_brightness(0)
             , m_rumble_state({0, 0}) { }
 
             virtual Result Initialize() override;
@@ -179,7 +178,6 @@ namespace ams::controller {
             u8 m_feature_flags1;
             u8 m_led_flags;
             RGBColour m_lightbar_colour;
-            u8 m_lightbar_brightness;
             u8 m_rumble_intensity;
             u8 m_adaptive_trigger_travel;
 

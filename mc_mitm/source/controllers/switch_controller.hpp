@@ -15,6 +15,7 @@
  */
 #pragma once
 #include "switch_types.hpp"
+#include "controller_profiles_management.hpp"
 #include "../bluetooth_mitm/bluetooth/bluetooth_types.hpp"
 #include "../bluetooth_mitm/bluetooth/bluetooth_hid_report.hpp"
 #include "../async/future_response.hpp"
@@ -85,6 +86,8 @@ namespace ams::controller {
         protected:
             bluetooth::Address m_address;
             HardwareID m_id;
+
+            ControllerProfileConfig m_profile;
 
             SwitchButtons m_buttons;
             SwitchAnalogStick m_left_stick;

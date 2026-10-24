@@ -63,9 +63,6 @@ namespace ams::controller {
     }
 
     Result Dualshock4Controller::Initialize() {
-        auto config = mitm::GetGlobalConfig();
-        m_report_rate = static_cast<Dualshock4ReportRate>(config->misc.dualshock4_polling_rate);
-        m_lightbar_brightness = config->misc.dualshock4_lightbar_brightness;
 
         R_TRY(this->PushRumbleLedState());
         R_TRY(EmulatedSwitchController::Initialize());
@@ -94,7 +91,7 @@ namespace ams::controller {
         u8 player_index = static_cast<u8>(player_number);
 
         RGBColour colour = PlayerLedBaseColours[player_index];
-        u8 multiplier = LedBrightnessMultipliers[m_lightbar_brightness];
+        u8 multiplier = LedBrightnessMultipliers[m_profile.misc.dualshock4_lightbar_brightness];
         colour.r *= multiplier;
         colour.g *= multiplier;
         colour.b *= multiplier;
@@ -253,7 +250,7 @@ namespace ams::controller {
     Result Dualshock4Controller::PushRumbleLedState() {
         Dualshock4ReportData report = {};
         report.id = 0x11;
-        report.output0x11.data[0] = static_cast<u8>(0xc0 | (m_report_rate & 0xff));
+        report.output0x11.data[0] = static_cast<u8>(0xc0 | (static_cast<Dualshock4ReportRate>(m_profile.misc.dualshock4_polling_rate) & 0xff));
         report.output0x11.data[1] = 0x20;
         report.output0x11.data[2] = 0xf3;
         report.output0x11.data[3] = 0x04;

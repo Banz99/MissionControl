@@ -48,4 +48,27 @@ namespace ams::utils {
         R_SUCCEED();
     }
 
+    void ParseBluetoothAddress(const char *value, bluetooth::Address *out) {
+        // Check length of address string is correct
+        if (std::strlen(value) != 3*sizeof(bluetooth::Address) - 1) {
+            return;
+        }
+
+        // Parse bluetooth mac address
+        char buf[2 + 1];
+        bluetooth::Address address = {};
+        for (u32 i = 0; i < sizeof(bluetooth::Address); ++i) {
+            // Convert hex pair to number
+            std::memcpy(buf, &value[i*3], 2);
+            address.address[i] = static_cast<u8>(std::strtoul(buf, nullptr, 16));
+
+            // Check for colon separator
+            if ((i < sizeof(bluetooth::Address) - 1) && (value[i*3 + 2] != ':')) {
+                return;
+            }
+        }
+
+        *out = address;
+    }
+
 }

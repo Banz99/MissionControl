@@ -97,13 +97,11 @@ namespace ams::controller {
         m_feature_flags0 = 0x03;
         m_feature_flags1 = 0x54;
 
-        auto config = mitm::GetGlobalConfig();
-        m_lightbar_brightness = config->misc.dualsense_lightbar_brightness;
-        m_rumble_intensity    = 0x08 - config->misc.dualsense_vibration_intensity; // User setting is inverse of how the controller sets intensity
-        if (config->misc.dualsense_adaptive_trigger_travel > 0) {
+        m_rumble_intensity    = 0x08 - m_profile.misc.dualsense_vibration_intensity; // User setting is inverse of how the controller sets intensity
+        if (m_profile.misc.dualsense_adaptive_trigger_travel > 0) {
             m_feature_flags0 = 0x0F;
-            m_adaptive_trigger_travel = static_cast<u8>(UINT8_MAX * config->misc.dualsense_adaptive_trigger_travel / 100.0f);
-            m_trigger_threshold       = (config->misc.analog_trigger_activation_threshold / 100.0f) * (config->misc.dualsense_adaptive_trigger_travel / 100.0f);
+            m_adaptive_trigger_travel = static_cast<u8>(UINT8_MAX * m_profile.misc.dualsense_adaptive_trigger_travel / 100.0f);
+            m_trigger_threshold       = (m_profile.misc.analog_trigger_activation_threshold / 100.0f) * (m_profile.misc.dualsense_adaptive_trigger_travel / 100.0f);
         }
 
         R_SUCCEED();
@@ -125,8 +123,7 @@ namespace ams::controller {
         u8 player_index = static_cast<u8>(player_number);
         u16 fw_version = *reinterpret_cast<u16 *>(&m_version_info.data[43]);
 
-        auto config = mitm::GetGlobalConfig();
-        if (!config->misc.dualsense_enable_player_leds || (player_number == SwitchPlayerNumber::Invalid)) {
+        if (!m_profile.misc.dualsense_enable_player_leds || (player_number == SwitchPlayerNumber::Invalid)) {
             m_led_flags = 0x00;
         } else if (fw_version < 0x0282) {
             m_led_flags = PlayerLedFlags[player_index];
@@ -138,7 +135,7 @@ namespace ams::controller {
         m_led_flags |= 0x20;
 
         RGBColour colour = PlayerLedBaseColours[player_index];
-        u8 multiplier = LedBrightnessMultipliers[m_lightbar_brightness];
+        u8 multiplier = LedBrightnessMultipliers[m_profile.misc.dualsense_lightbar_brightness];
         colour.r *= multiplier;
         colour.g *= multiplier;
         colour.b *= multiplier;

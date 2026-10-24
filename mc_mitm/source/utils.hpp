@@ -18,3 +18,4 @@
 #include "utils/utils_bluetooth_address.hpp"
 #include "utils/utils_crc8.hpp"
 #include "utils/utils_quaternion.hpp"
+#include "utils/utils_stuff.hpp"

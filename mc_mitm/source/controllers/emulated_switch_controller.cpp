@@ -24,12 +24,7 @@ namespace ams::controller {
     , m_input_report_mode(SwitchHidReportId::BasicInputReport)
     , m_vibration_processor(this)
     , m_hid_command_processor(this)
-    , m_ext_grip_command_processor(this) {
-        auto config = mitm::GetGlobalConfig();
-        m_vibration_processor.SetEnabled(config->general.enable_rumble);
-        m_enable_motion = config->general.enable_motion;
-        m_trigger_threshold = config->misc.analog_trigger_activation_threshold / 100.0;
-    };
+    , m_ext_grip_command_processor(this) { };
 
     Result EmulatedSwitchController::Initialize() {
         R_TRY(SwitchController::Initialize());
@@ -39,6 +34,12 @@ namespace ams::controller {
         R_TRY(fs::EnsureDirectory(controller_dir.c_str()));
 
         R_TRY(m_virtual_memory.Initialize((controller_dir + "/spi_flash.bin").c_str()));
+
+	    GetControllerConfig(&m_address, &m_profile);
+
+	    m_vibration_processor.SetEnabled(m_profile.general.enable_rumble);
+        m_enable_motion = m_profile.general.enable_motion;
+        m_trigger_threshold = m_profile.misc.analog_trigger_activation_threshold / 100.0;
 
         R_SUCCEED();
     }

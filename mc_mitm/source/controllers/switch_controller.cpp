@@ -221,8 +221,49 @@ namespace ams::controller {
         SwitchAnalogStick left_stick = m_left_stick;
         SwitchAnalogStick right_stick = m_right_stick;
 
+        if (m_profile.misc.disable_home_button)
+            buttons.Assign(SwitchButton::Home, false);
+
         buttons.ApplyCombo(SwitchButton::Home,    DefaultHomeButtonCombo);
         buttons.ApplyCombo(SwitchButton::Capture, DefaultCaptureButtonCombo);
+
+        if (m_profile.misc.use_western_layout) {
+            bool temp = buttons.Test(SwitchButton::A);
+            buttons.Assign(SwitchButton::A, buttons.Test(SwitchButton::B));
+            buttons.Assign(SwitchButton::B, temp);
+            temp = buttons.Test(SwitchButton::X);
+            buttons.Assign(SwitchButton::X, buttons.Test(SwitchButton::Y));
+            buttons.Assign(SwitchButton::Y, temp);
+        }
+
+        if (m_profile.misc.swap_dpad_lstick) {
+            uint16_t temp_lstick_x = SwitchAnalogStick::CenterValue; // Start in a neutral position
+            uint16_t temp_lstick_y = SwitchAnalogStick::CenterValue;
+            if (buttons.Test(SwitchButton::Down))
+                temp_lstick_y -= (SwitchAnalogStick::MaximumValue / 2);
+            if (buttons.Test(SwitchButton::Up)) // Could have been if else, but some controllers don't have an actual dpad, so both states are allowed
+                temp_lstick_y += (SwitchAnalogStick::MaximumValue / 2);
+            if (buttons.Test(SwitchButton::Right))
+                temp_lstick_x += (SwitchAnalogStick::MaximumValue / 2);
+            if (buttons.Test(SwitchButton::Left))
+                temp_lstick_x -= (SwitchAnalogStick::MaximumValue / 2);
+
+            buttons.Assign(SwitchButton::Left,  left_stick.GetX() < SwitchAnalogStick::DpadThresholdBegin ? true : false);
+            buttons.Assign(SwitchButton::Right, left_stick.GetX() > SwitchAnalogStick::DpadThresholdEnd   ? true : false);
+            buttons.Assign(SwitchButton::Down,  left_stick.GetY() < SwitchAnalogStick::DpadThresholdBegin ? true : false);
+            buttons.Assign(SwitchButton::Up,    left_stick.GetY() > SwitchAnalogStick::DpadThresholdEnd   ? true : false);
+
+            left_stick.SetValues(temp_lstick_x, temp_lstick_y);
+        }
+
+        if (m_profile.misc.invert_lstick_xaxis)
+            left_stick.SetX(left_stick.GetXInverted());
+        if (m_profile.misc.invert_lstick_yaxis)
+            left_stick.SetY(left_stick.GetYInverted());
+        if (m_profile.misc.invert_rstick_xaxis)
+            right_stick.SetX(right_stick.GetXInverted());
+        if (m_profile.misc.invert_rstick_yaxis)
+            right_stick.SetY(right_stick.GetYInverted());
 
         /* Overwrite report components we wish to modify. */
         auto report_id = static_cast<SwitchHidReportId>(report_buffer[0]);
